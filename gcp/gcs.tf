@@ -103,7 +103,7 @@ module "gcs-bookmarks-manager-icons" {
 
 # GCS bucket for backing up the SQLite database and favicons
 module "gcs-bookmarks-manager-backup" {
-  source        = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric//modules/gcs?ref=v49.1.0"
+  source        = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric//modules/gcs?ref=v50.0.0"
   project_id    = module.project.project_id
   prefix        = module.project.project_id
   name          = "bm-backup-${local.region_shortnames[var.backup_region]}"
