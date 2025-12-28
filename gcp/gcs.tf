@@ -23,7 +23,7 @@ module "gcs-bookmarks-manager-iac" {
 
 # GCS bucket for Cloud Build source staging
 module "gcs-bookmarks-manager-cloud-build" {
-  source        = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric//modules/gcs?ref=v49.1.0"
+  source        = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric//modules/gcs?ref=v50.0.0"
   project_id    = module.project.project_id
   prefix        = module.project.project_id
   name          = "bm-build-${local.region_shortnames[var.region]}"
