@@ -78,7 +78,7 @@ bookmarks/
 
 Follow these coding style rules when writing Python code:
 
-*   **Linter:** Code must pass `flake8 --ignore=W292,W503 --max-line-length=127 --show-source --statistics *.py app/*.py app/routes/*.py app/services/*.py tests/*.py tests/integration/*.py tests/unit/*.py`
+*   **Linter:** Code must pass `flake8 --ignore=W292,W503 --max-line-length=127 --show-source --statistics *.py app/*.py app/routes/*.py app/services/*.py app/utils/*.py tests/*.py tests/integration/*.py tests/unit/*.py`
 *   **Line Length:** Maximum line length is 127 characters
 *   **Blank Lines:** No blank line should contain whitespace (trailing whitespace is not allowed)
 *   **End of File:** W292 is ignored (no blank line required at end of file)

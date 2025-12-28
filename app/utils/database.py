@@ -102,21 +102,21 @@ def init_db():
         CREATE INDEX IF NOT EXISTS idx_bookmark_tags_bookmark ON bookmark_tags(bookmark_id);
         CREATE INDEX IF NOT EXISTS idx_bookmark_tags_tag ON bookmark_tags(tag_id);
 
-        CREATE TRIGGER IF NOT EXISTS update_folders_timestamp 
+        CREATE TRIGGER IF NOT EXISTS update_folders_timestamp
         AFTER UPDATE ON folders
         FOR EACH ROW
         BEGIN
             UPDATE folders SET created_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
         END;
 
-        CREATE TRIGGER IF NOT EXISTS update_tags_timestamp 
+        CREATE TRIGGER IF NOT EXISTS update_tags_timestamp
         AFTER UPDATE ON tags
         FOR EACH ROW
         BEGIN
             UPDATE tags SET created_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
         END;
 
-        CREATE TRIGGER IF NOT EXISTS update_bookmarks_timestamp 
+        CREATE TRIGGER IF NOT EXISTS update_bookmarks_timestamp
         AFTER UPDATE ON bookmarks
         FOR EACH ROW
         BEGIN
