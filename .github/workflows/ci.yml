@@ -95,6 +95,11 @@ jobs:
         run: |
           docker build -t bookmarks-manager .
 
+      - name: 🔐 Set permissions for volumes
+        run: |
+          mkdir -p database app/static/favicons
+          chmod -R 777 database app/static/favicons
+
       - name: 🚀 Start Docker container
         run: |
           docker run -d -p 8080:8080 \
