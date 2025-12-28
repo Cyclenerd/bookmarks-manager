@@ -2,7 +2,7 @@
 
 # GCS bucket for storing Terraform state
 module "gcs-bookmarks-manager-iac" {
-  source        = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric//modules/gcs?ref=v49.1.0"
+  source        = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric//modules/gcs?ref=v50.0.0"
   project_id    = module.project.project_id
   prefix        = module.project.project_id
   name          = "bm-iac-${local.region_shortnames[var.region]}"
