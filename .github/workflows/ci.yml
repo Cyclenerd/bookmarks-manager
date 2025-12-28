@@ -29,7 +29,9 @@ jobs:
 
       - name: 🔍 Lint with flake8
         run: |
-          flake8 --ignore=W292,W503 --max-line-length=127 --show-source --statistics *.py app/*.py app/routes/*.py app/services/*.py app/utils/*.py tests/*.py tests/integration/*.py tests/unit/*.py
+          flake8 --ignore=W292,W503 --max-line-length=127 --show-source --statistics \
+            *.py app/*.py app/routes/*.py app/services/*.py app/utils/*.py \
+            tests/*.py tests/integration/*.py tests/unit/*.py
 
       - name: 🧪 Run tests
         run: |
@@ -95,7 +97,10 @@ jobs:
 
       - name: 🚀 Start Docker container
         run: |
-          docker run -d --name bookmarks-manager -p 8080:8080 bookmarks-manager
+          docker run -d -p 8080:8080 \
+            -v $(pwd)/database:/web/database:rw \
+            -v $(pwd)/app/static/favicons:/web/app/static/favicons:rw \
+            --name bookmarks-manager bookmarks-manager
 
       - name: ⏳ Wait for container to be ready
         run: |
