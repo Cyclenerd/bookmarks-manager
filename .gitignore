@@ -41,3 +41,5 @@ cloudbuild-container.yaml
 build-container.sh
 !gcp/build-container.template.sh
 providers.tf.gcs
+# If you want to have your provider file versioned, remove the line
+providers.tf
