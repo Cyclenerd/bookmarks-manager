@@ -12,6 +12,8 @@ Bookmarks Manager is a lightweight, self-hosted bookmarking solution designed fo
 
 Take control of your web links with a powerful organization system, lightning-fast search, and a mobile-friendly interface.
 
+![Screenshot](./img/screenshot.png)
+
 ## Features
 
 ### 📁 Organization
