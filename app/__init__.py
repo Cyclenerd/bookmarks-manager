@@ -1,0 +1,75 @@
+"""Flask application factory module.
+
+This module provides the application factory function for creating and
+configuring the Flask application instance with all necessary extensions,
+blueprints, and database initialization.
+"""
+
+from flask import Flask
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from config import Config
+import os
+
+
+def create_app(config_class=Config):
+    """Create and configure the Flask application.
+
+    This factory function creates a new Flask application instance, configures
+    it with the provided configuration class, initializes rate limiting, registers
+    blueprints, and sets up the database.
+
+    Args:
+        config_class: Configuration class to use (default: Config from config.py)
+
+    Returns:
+        Flask: Configured Flask application instance
+
+    Example:
+        >>> app = create_app()
+        >>> app.run()
+    """
+    app = Flask(__name__)
+    app.config.from_object(config_class)
+
+    os.makedirs(app.config['FAVICON_CACHE_DIR'], exist_ok=True)
+
+    app.limiter = Limiter(
+        get_remote_address,
+        app=app,
+        storage_uri=app.config['RATELIMIT_STORAGE_URI'],
+        default_limits=[app.config['RATELIMIT_DEFAULT']]
+    )
+
+    @app.after_request
+    def add_security_headers(response):
+        """Add security headers to all responses."""
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-Frame-Options'] = 'DENY'
+        response.headers['X-XSS-Protection'] = '1; mode=block'
+        response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+        csp_policy = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+            "img-src 'self' data: https:; "
+            "font-src 'self' https://cdn.jsdelivr.net; "
+            "connect-src 'self'; "
+            "frame-ancestors 'none'; "
+            "base-uri 'self'; "
+            "form-action 'self'"
+        )
+        response.headers['Content-Security-Policy'] = csp_policy
+        return response
+
+    from app.routes import main
+    app.register_blueprint(main.bp)
+
+    from app.utils.database import init_db, close_db
+    with app.app_context():
+        init_db()
+
+    app.teardown_appcontext(close_db)
+
+    return app

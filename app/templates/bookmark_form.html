@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <h2 class="mb-4">
+            <i class="bi bi-{% if bookmark %}pencil{% else %}plus-lg{% endif %}"></i>
+            {% if bookmark %}Edit{% else %}Add{% endif %} Bookmark
+            {% if current_folder and not bookmark %}
+            <span class="text-body-secondary">in {{ current_folder.name }}</span>
+            {% endif %}
+        </h2>
+
+        <form action="{{ url_for('main.save_bookmark') }}" method="post" id="bookmarkForm">
+            {% if bookmark %}
+            <input type="hidden" name="bookmark_id" value="{{ bookmark.id }}">
+            {% endif %}
+            {% if return_url %}
+            <input type="hidden" name="return_url" value="{{ return_url }}">
+            {% endif %}
+
+            <div class="mb-3">
+                <label for="url" class="form-label">URL *</label>
+                <div class="input-group">
+                    <input type="url" class="form-control" id="url" name="url"
+                        value="{{ bookmark.url if bookmark else (url if url else '') }}" required autofocus>
+                    <button class="btn btn-outline-secondary" type="button" id="fetchBtn" {% if bookmark %}disabled{%
+                        endif %}>
+                        <span id="fetchBtnText"><i class="bi bi-download"></i> Fetch</span>
+                        <span id="fetchBtnSpinner" class="d-none">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            Fetching...
+                        </span>
+                    </button>
+                </div>
+                <div class="form-text">Enter URL and click "Fetch" to automatically get the title.</div>
+            </div>
+
+            <div class="mb-3">
+                <label for="title" class="form-label">Title *</label>
+                <input type="text" class="form-control" id="title" name="title"
+                    value="{{ bookmark.title if bookmark else (title if title else '') }}" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="description" class="form-label">Description</label>
+                <textarea class="form-control" id="description" name="description"
+                    rows="3">{{ bookmark.description if bookmark else '' }}</textarea>
+            </div>
+
+            <div class="mb-3">
+                <label for="folder_id" class="form-label">Folder</label>
+                <select class="form-select" id="folder_id" name="folder_id">
+                    <option value="">No Folder</option>
+                    {% macro render_folder_option(folder, level=0) %}
+                    <option value="{{ folder.id }}" {% if (bookmark and bookmark.folder_id==folder.id) or
+                        (current_folder and not bookmark and current_folder.id==folder.id) %}selected{% endif %}>
+                        {% for i in range(level) %}├─{% endfor %}{% if level > 0 %} {% endif %}{{ folder.name }}
+                    </option>
+                    {% for child in folder.children %}
+                    {{ render_folder_option(child, level + 1) }}
+                    {% endfor %}
+                    {% endmacro %}
+
+                    {% for folder in folders %}
+                    {{ render_folder_option(folder) }}
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="tag_ids" class="form-label">Tags (hold Ctrl/Cmd to select multiple)</label>
+                <select class="form-select" id="tag_ids" name="tag_ids" multiple size="5">
+                    {% for tag in tags %}
+                    <option value="{{ tag.id }}" {% if bookmark %} {% for btag in bookmark.tags %} {% if btag.id==tag.id
+                        %}selected{% endif %} {% endfor %} {% endif %}>
+                        {{ tag.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save"></i> Save
+                </button>
+                <a href="{{ return_url if return_url else url_for('main.index') }}" class="btn btn-secondary">
+                    <i class="bi bi-x-lg"></i> Cancel
+                </a>
+                {% if bookmark %}
+                <button type="button" class="btn btn-outline-danger ms-auto"
+                    onclick="if(confirm('Delete this bookmark?')) document.getElementById('deleteForm').submit();">
+                    <i class="bi bi-trash"></i> Delete
+                </button>
+                {% endif %}
+            </div>
+        </form>
+
+        {% if bookmark %}
+        <form id="deleteForm" action="{{ url_for('main.delete_bookmark', bookmark_id=bookmark.id) }}" method="post"
+            style="display:none;">
+            {% if return_url %}
+            <input type="hidden" name="return_url" value="{{ return_url }}">
+            {% endif %}
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    document.getElementById('fetchBtn').addEventListener('click', async function () {
+        const urlInput = document.getElementById('url');
+        const titleInput = document.getElementById('title');
+        const fetchBtn = document.getElementById('fetchBtn');
+        const fetchBtnText = document.getElementById('fetchBtnText');
+        const fetchBtnSpinner = document.getElementById('fetchBtnSpinner');
+
+        const url = urlInput.value.trim();
+
+        if (!url) {
+            alert('Please enter a URL first');
+            return;
+        }
+
+        fetchBtn.disabled = true;
+        fetchBtnText.classList.add('d-none');
+        fetchBtnSpinner.classList.remove('d-none');
+
+        try {
+            const response = await fetch('{{ url_for("main.fetch_metadata") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ url: url })
+            });
+
+            const data = await response.json();
+
+            if (data.success && data.title) {
+                titleInput.value = data.title;
+            } else {
+                alert('Could not fetch page metadata. Please enter title manually.');
+            }
+        } catch (error) {
+            alert('Error fetching metadata: ' + error.message);
+        } finally {
+            fetchBtn.disabled = false;
+            fetchBtnText.classList.remove('d-none');
+            fetchBtnSpinner.classList.add('d-none');
+        }
+    });
+
+    // Handle auto-fetch if URL is pre-filled (from bookmarklet)
+    window.addEventListener('DOMContentLoaded', function () {
+        const urlInput = document.getElementById('url');
+        const titleInput = document.getElementById('title');
+        const url = urlInput.value.trim();
+        const title = titleInput.value.trim();
+
+        if (url && !title) {
+            document.getElementById('fetchBtn').click();
+        }
+    });
+</script>
+{% endblock %}

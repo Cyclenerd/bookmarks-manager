@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="search-container mb-4">
+    <form action="{{ url_for('main.search_page') }}" method="get" id="searchForm">
+        <input type="search" class="form-control" id="liveSearch" name="q" placeholder="Search bookmarks..."
+            value="{{ query }}" autocomplete="off">
+    </form>
+    <div class="search-results d-none" id="searchResults">
+        <div class="list-group list-group-flush">
+            <!-- Results will be inserted here -->
+        </div>
+    </div>
+</div>
+
+<main>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h4>
+                <i class="bi bi-search"></i> Search Results
+            </h4>
+            <p class="text-body-secondary mb-0">
+                {% if query %}
+                Found {{ total }} bookmark{% if total != 1 %}s{% endif %} for "{{ query }}"{% if total > 0 %} (showing
+                {{ ((page - 1) * 100) + 1 }}-{{ ((page - 1) * 100) + bookmarks|length }}){% endif %}
+                {% else %}
+                Enter a search query
+                {% endif %}
+            </p>
+        </div>
+        {% if bookmarks %}
+        <div class="btn-group" role="group">
+            {% set next_order = 'asc' if sort_order == 'desc' else 'desc' %}
+            <a href="{{ url_for('main.search_page', q=query, sort='title', order=(next_order if sort_by == 'title' else 'asc'), page=page) }}"
+                class="btn btn-sm btn-outline-secondary {% if sort_by == 'title' %}active{% endif %}">
+                <i class="bi bi-sort-alpha-{{ 'up' if sort_by == 'title' and sort_order == 'asc' else 'down' }}"></i>
+                Title
+            </a>
+            <a href="{{ url_for('main.search_page', q=query, sort='url', order=(next_order if sort_by == 'url' else 'asc'), page=page) }}"
+                class="btn btn-sm btn-outline-secondary {% if sort_by == 'url' %}active{% endif %}">
+                <i class="bi bi-link-45deg"></i> URL
+            </a>
+            <a href="{{ url_for('main.search_page', q=query, sort='created_at', order=(next_order if sort_by == 'created_at' else 'asc'), page=page) }}"
+                class="btn btn-sm btn-outline-secondary {% if sort_by == 'created_at' %}active{% endif %}">
+                <i class="bi bi-calendar"></i> Date
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if bookmarks %}
+    <div class="list-group">
+        {% for bookmark in bookmarks %}
+        <div class="list-group-item">
+            <div class="d-flex align-items-start gap-3">
+                <div class="flex-grow-1 min-w-0">
+                    <h5 class="mb-2 h6">
+                        {% if bookmark.pinned %}
+                        <i class="bi bi-pin-angle-fill text-warning"></i>
+                        {% endif %}
+                        {% if bookmark.favicon %}
+                        <img src="{{ url_for('static', filename=bookmark.favicon) }}" alt="" class="favicon">
+                        {% else %}
+                        <i class="bi bi-bookmark"></i>
+                        {% endif %}
+                        <a href="{{ bookmark.url }}" target="_blank" rel="noopener noreferrer"
+                            class="text-decoration-none">{{ bookmark.title
+                            }}</a>
+                    </h5>
+                    <p class="mb-2 text-break"><code>{{ bookmark.url }}</code></p>
+                    {% if bookmark.description %}
+                    <p class="mb-2 text-break">{{ bookmark.description }}</p>
+                    {% endif %}
+                    <div class="mb-2">
+                        {% if bookmark.folder_name %}
+                        <span class="badge text-bg-primary"><i class="bi bi-folder"></i> {{ bookmark.folder_name
+                            }}</span>
+                        {% endif %}
+                        {% for tag in bookmark.tags %}
+                        <span class="badge text-bg-secondary"><i class="bi bi-tag"></i> {{ tag.name }}</span>
+                        {% endfor %}
+                    </div>
+                    <small class="text-body-secondary">{{ bookmark.created_at }}</small>
+                </div>
+                <div class="d-flex flex-column gap-1">
+                    <form action="{{ url_for('main.toggle_pin', bookmark_id=bookmark.id) }}" method="post">
+                        <button type="submit" class="btn btn-sm btn-outline-secondary"
+                            title="{% if bookmark.pinned %}Unpin{% else %}Pin{% endif %}">
+                            <i class="bi bi-pin"></i>
+                        </button>
+                    </form>
+                    <a href="{{ url_for('main.edit_bookmark_form', bookmark_id=bookmark.id) }}"
+                        class="btn btn-sm btn-outline-secondary" title="Edit">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    <form action="{{ url_for('main.delete_bookmark', bookmark_id=bookmark.id) }}" method="post"
+                        onsubmit="return confirm('Delete this bookmark?');">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if total_pages > 1 %}
+    <nav aria-label="Search results pagination" class="mt-4">
+        <ul class="pagination justify-content-center">
+            <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                <a class="page-link"
+                    href="{{ url_for('main.search_page', q=query, sort=sort_by, order=sort_order, page=page-1) }}">
+                    <i class="bi bi-chevron-left"></i>
+                    <span class="visually-hidden">Previous</span>
+                </a>
+            </li>
+
+            {% for p in range(1, total_pages + 1) %}
+            {% if p == 1 or p == total_pages or (p >= page - 2 and p <= page + 2) %} <li
+                class="page-item {% if p == page %}active{% endif %}">
+                <a class="page-link"
+                    href="{{ url_for('main.search_page', q=query, sort=sort_by, order=sort_order, page=p) }}">{{ p
+                    }}</a>
+                </li>
+                {% elif p == page - 3 or p == page + 3 %}
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+                {% endif %}
+                {% endfor %}
+
+                <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                    <a class="page-link"
+                        href="{{ url_for('main.search_page', q=query, sort=sort_by, order=sort_order, page=page+1) }}">
+                        <span class="visually-hidden">Next</span>
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+        </ul>
+    </nav>
+    {% endif %}
+    {% elif query %}
+    <div class="text-center py-5">
+        <i class="bi bi-search display-1 text-body-secondary"></i>
+        <p class="text-body-secondary mt-3">No bookmarks found matching "{{ query }}"</p>
+        <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to all bookmarks
+        </a>
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-search display-1 text-body-secondary"></i>
+        <p class="text-body-secondary mt-3">Enter a search query to find bookmarks</p>
+    </div>
+    {% endif %}
+</main>
+{% endblock %}

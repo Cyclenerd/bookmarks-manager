@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <h2 class="mb-4">Import & Export Bookmarks</h2>
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-download"></i> Import from Firefox</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">
+                    Import bookmarks from a Firefox JSON bookmark export file.
+                </p>
+                <form id="importForm" action="{{ url_for('main.import_firefox') }}" method="post"
+                    enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="file" class="form-label">Select Firefox JSON file (max. 128 KB)</label>
+                        <input type="file" class="form-control" id="file" name="file" accept=".json,application/json"
+                            required>
+                        <div class="form-text">
+                            To export from Firefox: Bookmarks → Manage Bookmarks → Import and Backup → Backup
+                        </div>
+                    </div>
+                    <button type="submit" id="importBtn" class="btn btn-primary">
+                        <span id="importNormal">
+                            <i class="bi bi-upload"></i> Import Bookmarks
+                        </span>
+                        <span id="importLoading" class="d-none">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            Importing...
+                        </span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-upload"></i> Export to Firefox</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">
+                    Export all bookmarks to a Firefox-compatible JSON file.
+                </p>
+                <a href="{{ url_for('main.export_firefox') }}" class="btn btn-primary">
+                    <i class="bi bi-download"></i> Download Firefox JSON
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('importForm').addEventListener('submit', function () {
+        const btn = document.getElementById('importBtn');
+        const normal = document.getElementById('importNormal');
+        const loading = document.getElementById('importLoading');
+
+        btn.disabled = true;
+        normal.classList.add('d-none');
+        loading.classList.remove('d-none');
+    });
+</script>
+{% endblock %}
