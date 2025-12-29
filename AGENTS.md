@@ -49,17 +49,12 @@ bookmarks/
 │   ├── routes/              # Route handlers
 │   │   └── main.py          # Main routes
 │   ├── services/            # Business logic
-│   │   ├── bookmark_service.py
-│   │   ├── folder_service.py
-│   │   └── tag_service.py
 │   ├── utils/               # Utility functions
-│   │   ├── db.py            # Database utilities
-│   │   └── favicon.py       # Favicon fetching
+│   │   ├── auth.py          # Authentication utilities module
+│   │   └── database.py      # Database utilities
 │   ├── templates/           # Jinja2 templates
 │   └── static/              # Static files & favicon cache
 ├── tests/                   # Pytest test suite
-│   └── unit/
-│       └── test_app.py
 ├── config.py                # Configuration
 ├── run.py                   # Application entry point
 └── requirements.txt         # Python dependencies
