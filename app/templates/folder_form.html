@@ -26,28 +26,11 @@
                     value="{{ folder.name if folder else '' }}" required autofocus>
             </div>
 
-            {% if folder and not parent_folder %}
-            <div class="mb-3">
-                <label for="parent_id" class="form-label">Parent Folder</label>
-                <select class="form-select" id="parent_id" name="parent_id">
-                    <option value="">No Parent (Root Level)</option>
-                    {% for f in folders %}
-                    {% if f.id != folder.id %}
-                    <option value="{{ f.id }}" {% if folder.parent_id==f.id %}selected{% endif %}>
-                        {{ f.name }}
-                    </option>
-                    {% endif %}
-                    {% endfor %}
-                </select>
-                <div class="form-text">Cannot select itself or its subfolders</div>
-            </div>
-            {% endif %}
-
             <div class="d-flex gap-2">
                 <button type="submit" class="btn btn-primary">
                     <i class="bi bi-save"></i> Save
                 </button>
-                <a href="{{ url_for('main.index') }}" class="btn btn-secondary">
+                <a href="{{ return_url if return_url else url_for('main.index') }}" class="btn btn-secondary">
                     <i class="bi bi-x-lg"></i> Cancel
                 </a>
                 {% if folder %}

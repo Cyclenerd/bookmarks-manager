@@ -392,6 +392,37 @@ def test_folder_parent_chain_with_corrupted_parent(app):
         assert len(folder['parent_chain']) == 0  # Should be empty since parent doesn't exist
 
 
+def test_bookmark_folder_null_on_delete_explicit(app):
+    """Test that deleting a folder explicitly sets the folder_id of bookmarks to NULL."""
+    with app.app_context():
+        # Create a folder
+        folder_id = folder_service.create_folder("Test Folder")
+
+        # Create a bookmark in that folder
+        bookmark_id = bookmark_service.create_bookmark(
+            url="https://example.com",
+            title="Test Bookmark",
+            description="Test Content",
+            folder_id=folder_id,
+            tag_ids=[]
+        )
+
+        # Verify the bookmark is in the folder
+        bookmark = bookmark_service.get_bookmark(bookmark_id)
+        assert bookmark['folder_id'] == folder_id
+
+        # Delete the folder
+        folder_service.delete_folder(folder_id)
+
+        # Verify the folder is gone
+        assert folder_service.get_folder(folder_id) is None
+
+        # Verify the bookmark still exists and its folder_id is NULL
+        updated_bookmark = bookmark_service.get_bookmark(bookmark_id)
+        assert updated_bookmark is not None
+        assert updated_bookmark['folder_id'] is None
+
+
 def test_database_teardown(app):
     """Test database teardown function"""
     with app.app_context():

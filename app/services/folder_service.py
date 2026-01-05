@@ -192,5 +192,6 @@ def delete_folder(folder_id):
         folder_id (str): UUID of folder to delete
     """
     db = get_db()
+    db.execute('UPDATE bookmarks SET folder_id = NULL WHERE folder_id = ?', (folder_id,))
     db.execute('DELETE FROM folders WHERE id = ?', (folder_id,))
     db.commit()
