@@ -75,11 +75,12 @@ def update_tag(tag_id, name):
 def delete_tag(tag_id):
     """Delete a tag.
 
-    Also removes all bookmark-tag associations.
+    Also removes all bookmark-tag associations from the bookmark_tags table.
 
     Args:
         tag_id (str): UUID of tag to delete
     """
     db = get_db()
+    db.execute('DELETE FROM bookmark_tags WHERE tag_id = ?', (tag_id,))
     db.execute('DELETE FROM tags WHERE id = ?', (tag_id,))
     db.commit()

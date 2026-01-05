@@ -228,12 +228,13 @@ def update_bookmark(bookmark_id, url, title, description, folder_id, tag_ids, fa
 def delete_bookmark(bookmark_id):
     """Delete a bookmark.
 
-    Also removes all associated tag relationships.
+    Also removes all associated tag relationships from the bookmark_tags table.
 
     Args:
         bookmark_id (str): UUID of bookmark to delete
     """
     db = get_db()
+    db.execute('DELETE FROM bookmark_tags WHERE bookmark_id = ?', (bookmark_id,))
     db.execute('DELETE FROM bookmarks WHERE id = ?', (bookmark_id,))
     db.commit()
 
