@@ -331,11 +331,12 @@ def add_folder_form():
         str: Rendered HTML form template
     """
     parent_id = request.args.get('parent')
+    folders = folder_service.get_folder_hierarchy()
     parent_folder = None
     if parent_id:
         parent_folder = folder_service.get_folder(parent_id)
     return_url = request.referrer or url_for('main.index')
-    return render_template('folder_form.html', folder=None, parent_folder=parent_folder,
+    return render_template('folder_form.html', folder=None, folders=folders, parent_folder=parent_folder,
                            return_url=return_url)
 
 
@@ -353,8 +354,9 @@ def edit_folder_form(folder_id):
     folder = folder_service.get_folder(folder_id)
     if not folder:
         return redirect(url_for('main.index'))
+    folders = folder_service.get_folder_hierarchy()
     return_url = request.referrer or url_for('main.index')
-    return render_template('folder_form.html', folder=folder, parent_folder=None, return_url=return_url)
+    return render_template('folder_form.html', folder=folder, folders=folders, parent_folder=None, return_url=return_url)
 
 
 @bp.route('/folder/save', methods=['POST'])

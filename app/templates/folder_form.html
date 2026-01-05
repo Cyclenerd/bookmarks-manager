@@ -16,14 +16,31 @@
             {% if folder %}
             <input type="hidden" name="folder_id" value="{{ folder.id }}">
             {% endif %}
-            {% if parent_folder %}
-            <input type="hidden" name="parent_id" value="{{ parent_folder.id }}">
-            {% endif %}
 
             <div class="mb-3">
                 <label for="name" class="form-label">Name *</label>
                 <input type="text" class="form-control" id="name" name="name"
                     value="{{ folder.name if folder else '' }}" required autofocus>
+            </div>
+
+            <div class="mb-3">
+                <label for="parent_id" class="form-label">Parent Folder</label>
+                <select class="form-select" id="parent_id" name="parent_id">
+                    <option value="">No Folder</option>
+                    {% macro render_folder_option(f, level=0) %}
+                    <option value="{{ f.id }}" {% if folder.parent_id==f.id %}selected{% endif %}>
+                        {% for i in range(level) %}├─{% endfor %}{% if level > 0 %} {% endif %}{{ f.name }}
+                    </option>
+                    {% for child in f.children %}
+                    {{ render_folder_option(child, level + 1) }}
+                    {% endfor %}
+                    {% endmacro %}
+
+                    {% for f in folders %}
+                    {{ render_folder_option(f) }}
+                    {% endfor %}
+                </select>
+                <div class="form-text">Cannot select itself or its subfolders</div>
             </div>
 
             <div class="d-flex gap-2">
