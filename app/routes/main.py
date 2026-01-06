@@ -5,7 +5,7 @@ including bookmark management, folder operations, tag handling, search functiona
 and Firefox import/export features.
 """
 
-from flask import Blueprint, render_template, send_from_directory, request, redirect, url_for, jsonify, Response
+from flask import Blueprint, render_template, send_from_directory, request, redirect, url_for, jsonify, Response, abort
 from app.utils.auth import requires_auth
 from app.services import bookmark_service, folder_service, tag_service, favicon_service, metadata_service, firefox_service
 import json
@@ -387,11 +387,8 @@ def save_folder():
             folder_service.update_folder(folder_id, name, parent_id)
         else:
             folder_service.create_folder(name, parent_id)
-    except ValueError:
-        if folder_id:
-            return redirect(url_for('main.edit_folder_form', folder_id=folder_id))
-        else:
-            return redirect(return_url or url_for('main.index'))
+    except ValueError as e:
+        abort(400, description=str(e))
 
     return redirect(return_url or url_for('main.index'))
 

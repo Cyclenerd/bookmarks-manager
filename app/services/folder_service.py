@@ -177,7 +177,7 @@ def update_folder(folder_id, name, parent_id=None):
     if parent_id:
         descendants = get_folder_with_descendants(folder_id)
         if parent_id in descendants:
-            raise ValueError("Cannot move folder into its own subfolder")
+            raise ValueError("Cannot move folder into its own subfolder!")
 
     db.execute('UPDATE folders SET name = ?, parent_id = ? WHERE id = ?', (name, parent_id, folder_id))
     db.commit()

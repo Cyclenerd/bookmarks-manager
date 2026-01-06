@@ -5,7 +5,8 @@ configuring the Flask application instance with all necessary extensions,
 blueprints, and database initialization.
 """
 
-from flask import Flask
+from flask import Flask, render_template
+from werkzeug.exceptions import HTTPException
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from config import Config
@@ -62,6 +63,14 @@ def create_app(config_class=Config):
         )
         response.headers['Content-Security-Policy'] = csp_policy
         return response
+
+    @app.errorhandler(HTTPException)
+    def handle_exception(e):
+        """Render error template for HTTP errors."""
+        return render_template('error.html',
+                               error_code=e.code,
+                               error_name=e.name,
+                               error_description=e.description), e.code
 
     from app.routes import main
     app.register_blueprint(main.bp)

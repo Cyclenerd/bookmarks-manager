@@ -344,8 +344,7 @@ def test_update_folder_circular_reference(client, auth_headers, app):
         'name': 'Parent Folder',
         'parent_id': child_id
     }, headers=auth_headers, follow_redirects=False)
-    assert response.status_code == 302
-    assert f'/folder/{parent_id}/edit' in response.location
+    assert response.status_code == 400
 
 
 def test_add_tag_form(client, auth_headers, app):
