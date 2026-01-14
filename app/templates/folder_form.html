@@ -28,7 +28,8 @@
                 <select class="form-select" id="parent_id" name="parent_id">
                     <option value="">No Folder</option>
                     {% macro render_folder_option(f, level=0) %}
-                    <option value="{{ f.id }}" {% if folder.parent_id==f.id %}selected{% endif %}>
+                    <option value="{{ f.id }}" {% if (folder and folder.parent_id==f.id) or (not folder and
+                        parent_folder and parent_folder.id==f.id) %}selected{% endif %}>
                         {% for i in range(level) %}├─{% endfor %}{% if level > 0 %} {% endif %}{{ f.name }}
                     </option>
                     {% for child in f.children %}
