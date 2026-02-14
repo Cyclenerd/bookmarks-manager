@@ -1,8 +1,8 @@
-# https://github.com/GoogleCloudPlatform/cloud-foundation-fabric/blob/v49.1.0/modules/gcs/README.md
+# https://github.com/GoogleCloudPlatform/cloud-foundation-fabric/blob/v53.0.0/modules/gcs/README.md
 
 # GCS bucket for storing Terraform state
 module "gcs-bookmarks-manager-iac" {
-  source        = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric//modules/gcs?ref=v49.1.0"
+  source        = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric//modules/gcs?ref=v53.0.0"
   project_id    = module.project.project_id
   prefix        = module.project.project_id
   name          = "bm-iac-${local.region_shortnames[var.region]}"
@@ -23,7 +23,7 @@ module "gcs-bookmarks-manager-iac" {
 
 # GCS bucket for Cloud Build source staging
 module "gcs-bookmarks-manager-cloud-build" {
-  source        = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric//modules/gcs?ref=v49.1.0"
+  source        = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric//modules/gcs?ref=v53.0.0"
   project_id    = module.project.project_id
   prefix        = module.project.project_id
   name          = "bm-build-${local.region_shortnames[var.region]}"
@@ -53,7 +53,7 @@ module "gcs-bookmarks-manager-cloud-build" {
 
 # GCS bucket for storing the SQLite database
 module "gcs-bookmarks-manager-database" {
-  source        = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric//modules/gcs?ref=v49.1.0"
+  source        = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric//modules/gcs?ref=v53.0.0"
   project_id    = module.project.project_id
   prefix        = module.project.project_id
   name          = "bm-db-${local.region_shortnames[var.region]}"
@@ -78,7 +78,7 @@ module "gcs-bookmarks-manager-database" {
 
 # GCS bucket for storing the favicons
 module "gcs-bookmarks-manager-icons" {
-  source        = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric//modules/gcs?ref=v49.1.0"
+  source        = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric//modules/gcs?ref=v53.0.0"
   project_id    = module.project.project_id
   prefix        = module.project.project_id
   name          = "bm-icons-${local.region_shortnames[var.region]}"
@@ -103,7 +103,7 @@ module "gcs-bookmarks-manager-icons" {
 
 # GCS bucket for backing up the SQLite database and favicons
 module "gcs-bookmarks-manager-backup" {
-  source        = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric//modules/gcs?ref=v49.1.0"
+  source        = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric//modules/gcs?ref=v53.0.0"
   project_id    = module.project.project_id
   prefix        = module.project.project_id
   name          = "bm-backup-${local.region_shortnames[var.backup_region]}"

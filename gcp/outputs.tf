@@ -1,5 +1,5 @@
 # Service URL of the Bookmarks Manager (Cloud Run)
-# https://github.com/GoogleCloudPlatform/cloud-foundation-fabric/blob/v49.1.0/modules/cloud-run-v2/README.md#outputs
+# https://github.com/GoogleCloudPlatform/cloud-foundation-fabric/blob/v53.0.0/modules/cloud-run-v2/README.md#outputs
 output "bookmarks_manager_url" {
   value = module.cloud_run_github_runners_manager.service_uri
 }

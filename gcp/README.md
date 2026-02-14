@@ -59,6 +59,7 @@ The **Owner role** (`roles/owner`) is the easiest option for deploying this proj
 | `roles/iam.roleViewer` | Role Viewer | Provides read access to all custom roles in the project. |
 | `roles/iam.serviceAccountAdmin` | Service Account Admin | Create and manage service accounts. |
 | `roles/iam.serviceAccountUser` | Service Account User | Run operations as the service account. |
+| `roles/logging.admin` | Logging Admin | Access to all logging permissions, and dependent permissions. |
 | `roles/monitoring.admin` | Monitoring Admin | All monitoring permissions. |
 | `roles/orgpolicy.policyViewer` | Organization Policy Viewer | View organization policies |
 | `roles/resourcemanager.projectIamAdmin` | Project IAM Admin | Access and administer a project IAM policies. |
@@ -93,9 +94,7 @@ gcloud auth application-default set-quota-project "$GOOGLE_CLOUD_PROJECT"
 
 ### 2. Organization Policy
 
-Make sure that the organization policy
-- "Allowed ingress settings (Cloud Run)" `run.allowedIngress` is configured and set to `all`, and
-- "Domain restricted sharing" `iam.allowedPolicyMemberDomains` is configured and set to `allowAll`.
+Make sure that the organization policy "Allowed ingress settings (Cloud Run)" `run.allowedIngress` is configured and set to `all`.
 
 ```yaml
 run.allowedIngress
@@ -104,11 +103,6 @@ spec:
   - values:
       allowedValues:
       - all
-
-iam.allowedPolicyMemberDomains
-spec:
-  rules:
-  - allowAll: true
 ```
 
 > That is the default setting.
@@ -117,7 +111,6 @@ spec:
 ```bash
 gcloud services enable "orgpolicy.googleapis.com" --project="$GOOGLE_CLOUD_PROJECT"
 gcloud org-policies describe "run.allowedIngress" --effective --project="$GOOGLE_CLOUD_PROJECT"
-gcloud org-policies describe "iam.allowedPolicyMemberDomains" --effective --project="$GOOGLE_CLOUD_PROJECT"
 ```
 
 If you are using the [Fabric FAST Project Factory](https://github.com/GoogleCloudPlatform/cloud-foundation-fabric), add the following to your `your-project-id.yaml`:
@@ -129,9 +122,6 @@ org_policies:
       - allow:
           values:
             - all
-  iam.allowedPolicyMemberDomains:
-    rules:
-      - allow_all: true
 ```
 
 See <https://cloud.google.com/resource-manager/docs/organization-policy/org-policy-constraints> for more information.
@@ -237,7 +227,7 @@ terraform destroy
 
 | Name | Version |
 |------|---------|
-| <a name="provider_google"></a> [google](#provider\_google) | >= 7.6.0, < 8.0.0 |
+| <a name="provider_google"></a> [google](#provider\_google) | >= 7.17.0, < 8.0.0 |
 | <a name="provider_local"></a> [local](#provider\_local) | >= 2.6.0, < 3.0.0 |
 | <a name="provider_null"></a> [null](#provider\_null) | >= 3.2.4, < 4.0.0 |
 | <a name="provider_time"></a> [time](#provider\_time) | >= 0.13.1, < 1.0.0 |
@@ -257,5 +247,5 @@ terraform destroy
 
 | Name | Description |
 |------|-------------|
-| <a name="output_bookmarks_manager_url"></a> [bookmarks\_manager\_url](#output\_bookmarks\_manager\_url) | Service URL of the Bookmarks Manager (Cloud Run) https://github.com/GoogleCloudPlatform/cloud-foundation-fabric/blob/v49.1.0/modules/cloud-run-v2/README.md#outputs |
+| <a name="output_bookmarks_manager_url"></a> [bookmarks\_manager\_url](#output\_bookmarks\_manager\_url) | Service URL of the Bookmarks Manager (Cloud Run) https://github.com/GoogleCloudPlatform/cloud-foundation-fabric/blob/v53.0.0/modules/cloud-run-v2/README.md#outputs |
 <!-- END_TF_DOCS -->

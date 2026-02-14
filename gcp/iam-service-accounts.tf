@@ -1,8 +1,8 @@
-# https://github.com/GoogleCloudPlatform/cloud-foundation-fabric/blob/v49.1.0/modules/iam-service-account/README.md
+# https://github.com/GoogleCloudPlatform/cloud-foundation-fabric/blob/v53.0.0/modules/iam-service-account/README.md
 
 # Service Account for the Runners Manager (Cloud Run)
 module "service-account-cloud-run-bookmarks-manager" {
-  source       = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric//modules/iam-service-account?ref=v49.1.0"
+  source       = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric//modules/iam-service-account?ref=v53.0.0"
   project_id   = module.project.project_id
   name         = "bookmarks-manager"
   display_name = "Cloud Run - Bookmarks Manager (Terraform managed)"
@@ -24,7 +24,7 @@ resource "time_sleep" "wait_for_service_account_cloud_run" {
 
 # Service Account for Cloud Build (Container image creation)
 module "service-account-cloud-build" {
-  source       = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric//modules/iam-service-account?ref=v49.1.0"
+  source       = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric//modules/iam-service-account?ref=v53.0.0"
   project_id   = module.project.project_id
   name         = "cloud-build-container"
   display_name = "Cloud Build - Create container (Terraform managed)"

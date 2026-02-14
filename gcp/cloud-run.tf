@@ -11,14 +11,18 @@ data "google_artifact_registry_docker_image" "container-image-bookmarks-manager"
 }
 
 # Deploy the Bookmarks Manager service on Cloud Run
-# https://github.com/GoogleCloudPlatform/cloud-foundation-fabric/blob/v49.1.0/modules/cloud-run-v2/README.md
+# https://github.com/GoogleCloudPlatform/cloud-foundation-fabric/blob/v53.0.0/modules/cloud-run-v2/README.md
 module "cloud_run_github_runners_manager" {
-  source     = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric//modules/cloud-run-v2?ref=v49.1.0"
+  source     = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric//modules/cloud-run-v2?ref=v53.0.0"
   project_id = module.project.project_id
   name       = "bookmarks-manager-${local.region_shortnames[var.region]}"
   type       = "SERVICE"
   region     = var.region
   service_config = {
+    # Disable IAM permission check
+    # There should be no requirement to pass the roles/run.invoker to the IAM block to enable public access.
+    # This allows for the org policy domain restricted sharing org policy remain enabled.
+    invoker_iam_disabled = true
     # Second generation Cloud Run for faster CPU and bucket mount
     gen2_execution_environment = true
     scaling = {
@@ -75,9 +79,6 @@ module "cloud_run_github_runners_manager" {
   service_account_config = {
     create = false
     email  = module.service-account-cloud-run-bookmarks-manager.email
-  }
-  iam = {
-    "roles/run.invoker" = ["allUsers"] # Public
   }
   deletion_protection = false
   depends_on = [
