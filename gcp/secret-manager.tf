@@ -1,7 +1,7 @@
 # Secret Manager for storing GitHub App credentials
 # https://github.com/GoogleCloudPlatform/cloud-foundation-fabric/blob/v53.0.0/modules/secret-manager/README.md
 module "secret-manager" {
-  source     = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric//modules/secret-manager?ref=v53.0.0"
+  source     = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric//modules/secret-manager?ref=v54.0.0"
   project_id = module.project.project_id
   secrets = {
     bookmarks-manager-password = {
