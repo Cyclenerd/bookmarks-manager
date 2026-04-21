@@ -101,7 +101,7 @@ module "gcs-bookmarks-manager-icons" {
   ]
 }
 
-# GCS bucket for backing up the SQLite database and favicons
+# GCS bucket for backing up the SQLite database
 module "gcs-bookmarks-manager-backup" {
   source        = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric//modules/gcs?ref=v53.0.0"
   project_id    = module.project.project_id
@@ -120,6 +120,23 @@ module "gcs-bookmarks-manager-backup" {
       }
     }
   }
+  iam = {
+    "roles/storage.admin" = [
+      "serviceAccount:${data.google_storage_transfer_project_service_account.default.email}"
+    ]
+  }
+}
+
+# GCS bucket for backing up the favicons
+module "gcs-bookmarks-manager-backup-icons" {
+  source                = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric//modules/gcs?ref=v53.0.0"
+  project_id            = module.project.project_id
+  prefix                = module.project.project_id
+  name                  = "bm-icons-backup-${local.region_shortnames[var.backup_region]}"
+  location              = var.backup_region
+  versioning            = false
+  force_destroy         = true
+  soft_delete_retention = 2592000 # 30 days
   iam = {
     "roles/storage.admin" = [
       "serviceAccount:${data.google_storage_transfer_project_service_account.default.email}"

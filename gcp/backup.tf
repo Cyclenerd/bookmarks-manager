@@ -56,8 +56,12 @@ resource "google_storage_transfer_job" "gcs-bookmarks-manager-icons-backup" {
       bucket_name = module.gcs-bookmarks-manager-icons.name
     }
     gcs_data_sink {
-      bucket_name = module.gcs-bookmarks-manager-backup.name
-      path        = "favicons/" # GCS sink Path argument must end with '/'
+      bucket_name = module.gcs-bookmarks-manager-backup-icons.name
+    }
+    transfer_options {
+      # Delete files from destination if they’re not also at source
+      # Use to sync destination to source (i.e., make destination match source exactly)
+      delete_objects_unique_in_sink = true
     }
   }
 
