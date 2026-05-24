@@ -2,7 +2,7 @@
 
 # Service Account for the Runners Manager (Cloud Run)
 module "service-account-cloud-run-bookmarks-manager" {
-  source       = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric//modules/iam-service-account?ref=v53.0.0"
+  source       = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric//modules/iam-service-account?ref=v56.0.0"
   project_id   = module.project.project_id
   name         = "bookmarks-manager"
   display_name = "Cloud Run - Bookmarks Manager (Terraform managed)"
