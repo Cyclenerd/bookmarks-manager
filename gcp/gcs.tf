@@ -129,7 +129,7 @@ module "gcs-bookmarks-manager-backup" {
 
 # GCS bucket for backing up the favicons
 module "gcs-bookmarks-manager-backup-icons" {
-  source                = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric//modules/gcs?ref=v53.0.0"
+  source                = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric//modules/gcs?ref=v56.0.0"
   project_id            = module.project.project_id
   prefix                = module.project.project_id
   name                  = "bm-icons-backup-${local.region_shortnames[var.backup_region]}"
