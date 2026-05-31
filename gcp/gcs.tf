@@ -78,7 +78,7 @@ module "gcs-bookmarks-manager-database" {
 
 # GCS bucket for storing the favicons
 module "gcs-bookmarks-manager-icons" {
-  source        = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric//modules/gcs?ref=v53.0.0"
+  source        = "git::https://github.com/GoogleCloudPlatform/cloud-foundation-fabric//modules/gcs?ref=v56.1.0"
   project_id    = module.project.project_id
   prefix        = module.project.project_id
   name          = "bm-icons-${local.region_shortnames[var.region]}"
