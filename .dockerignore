@@ -1,13 +1,51 @@
+# Files excluded from the Docker build context. The Dockerfile compiles the Go
+# binary (`go build ./cmd/bookmarks`) and relies on go:embed for web/ assets, so
+# only go.mod/go.sum, cmd/, internal/ and web/ are actually needed.
+
+# Version control and CI
 .git
+.gitignore
 .github
+.gcloudignore
+.dockerignore
+
+# Infrastructure, tooling and docs (not needed to build the image)
+gcp
+tools
+img
+*.md
+LICENSE
+docker-compose.yml
+
+# Editor / environment
+.editorconfig
+.devcontainer
+.env
+.env.*
+!.env.example
+
+# Go test files and build artifacts (go build ignores tests anyway)
+**/*_test.go
+/bookmarks
+/bmbin
+*.test
+*.out
+coverage.*
+
+# Local database files and the runtime favicon cache
+database
+**/*.db
+**/*.db-journal
+**/*.db-wal
+**/*.db-shm
+web/static/favicons/*
+!web/static/favicons/.gitkeep
+
+# Python leftovers (in case any remain locally)
 .venv
 __pycache__
 *.pyc
-tests
-gcp
-database
-*.db
-web/static/favicons/*.png
-/bookmarks
-/bmbin
-.env
+
+# OS cruft
+.DS_Store
+Thumbs.db
