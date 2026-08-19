@@ -1,3 +1,9 @@
+# Go
+/bookmarks
+/bmbin
+*.test
+*.out
+
 # Python
 __pycache__/
 *.py[cod]
@@ -8,6 +14,8 @@ __pycache__/
 *.db
 app/static/favicons/**
 !app/static/favicons/README.md
+web/static/favicons/*
+!web/static/favicons/.gitkeep
 *.tar
 
 # Environment variables

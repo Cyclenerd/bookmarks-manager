@@ -39,6 +39,15 @@ git checkout -b "feature-or-issue-name"
 ## Submitting Changes 🚀
 Make your desired changes to the codebase.
 
+Before committing, make sure the project builds and passes all checks:
+
+```bash
+gofmt -w ./...
+go vet ./...
+go build ./...
+go test ./...
+```
+
 Stage your changes using the following command:
 
 ```bash
@@ -60,12 +69,14 @@ This will open a new pull request to the original repository.
 
 Please follow these coding style rules to ensure consistency and maintainability:
 
-### Python
-- **Linter:** Code must pass `flake8` with the following settings:
-  - `--max-line-length=127`
-  - Ignore `W292` (no new line at end of file) and `W503` (line break before binary operator).
-- **Indentation:** Use **spaces**.
-- **Formatting:** No trailing whitespace.
+### Go
+- **Format:** Code must be formatted with `gofmt`. Run `gofmt -w ./...` (or `go fmt ./...`); `gofmt -l .` must produce no output.
+- **Vet:** Code must pass `go vet ./...`.
+- **Modules:** Keep `go.mod`/`go.sum` tidy with `go mod tidy`.
+- **Tests:** Add tests for new features and run the suite with `go test ./...`.
+- **Docs:** Every exported type, function and package should have a doc comment.
+- **Errors:** Wrap errors with `%w`; return errors rather than panicking.
+- **Layering:** SQL lives only in `internal/repository`; business logic in `internal/service`; HTTP concerns in `internal/handler`.
 
 ### Terraform
 - **Format:** Run `terraform fmt -recursive` on the `gcp` directory.

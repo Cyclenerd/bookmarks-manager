@@ -1,0 +1,73 @@
+{{ define "folderNav" }}
+<a href="/?folder={{ .Folder.ID }}&sort={{ .SortBy }}&order={{ .SortOrder }}"
+    class="list-group-item list-group-item-action d-flex justify-content-between align-items-center{{ if and .CurrentFolder (eq .CurrentFolder.ID .Folder.ID) }} active{{ end }}">
+    <span>
+        {{ range $i := iter .Level }}<span class="ms-3"></span>{{ end }}
+        <i class="bi bi-folder{{ if .Folder.Children }}-fill{{ end }}"></i> {{ .Folder.Name }}
+    </span>
+    {{ if gt .Folder.BookmarkCount 0 }}
+    <span class="badge bg-secondary rounded-pill">{{ .Folder.BookmarkCount }}</span>
+    {{ end }}
+</a>
+{{ range .Folder.Children }}
+{{ template "folderNav" (navChild $ .) }}
+{{ end }}
+{{ end }}
+
+{{ define "folderOption" }}
+<option value="{{ .Folder.ID }}"{{ if .Selected }} selected{{ end }}>
+    {{ range $i := iter .Level }}├─{{ end }}{{ if gt .Level 0 }} {{ end }}{{ .Folder.Name }}
+</option>
+{{ range .Folder.Children }}
+{{ template "folderOption" (optChild $ .) }}
+{{ end }}
+{{ end }}
+
+{{ define "bookmarkCard" }}
+<div class="list-group-item">
+    <div class="d-flex w-100 justify-content-between align-items-start gap-3">
+        <div class="flex-grow-1 min-w-0">
+            <h5 class="mb-2 h6">
+                {{ if .Pinned }}<i class="bi bi-pin-angle-fill text-warning"></i>{{ end }}
+                {{ if .Favicon }}
+                <img src="/static/{{ .Favicon }}" alt="" class="favicon">
+                {{ else }}
+                <i class="bi bi-bookmark"></i>
+                {{ end }}
+                <a href="{{ .URL }}" target="_blank" rel="noopener noreferrer"
+                    class="text-decoration-none">{{ .Title }}</a>
+            </h5>
+            <p class="mb-2 text-break"><code>{{ .URL }}</code></p>
+            {{ if .Description }}
+            <p class="mb-2 text-break">{{ .Description }}</p>
+            {{ end }}
+            <div class="mb-2">
+                {{ if .FolderName }}
+                <span class="badge text-bg-primary"><i class="bi bi-folder"></i> {{ .FolderName }}</span>
+                {{ end }}
+                {{ range .Tags }}
+                <span class="badge text-bg-secondary"><i class="bi bi-tag"></i> {{ .Name }}</span>
+                {{ end }}
+            </div>
+            <small class="text-body-secondary">{{ .CreatedAt }}</small>
+        </div>
+        <div class="d-flex flex-column gap-1">
+            <form action="/bookmark/{{ .ID }}/toggle-pin" method="post">
+                <button type="submit" class="btn btn-sm btn-outline-secondary"
+                    title="{{ if .Pinned }}Unpin{{ else }}Pin{{ end }}">
+                    <i class="bi bi-pin"></i>
+                </button>
+            </form>
+            <a href="/bookmark/{{ .ID }}/edit" class="btn btn-sm btn-outline-secondary" title="Edit">
+                <i class="bi bi-pencil"></i>
+            </a>
+            <form action="/bookmark/{{ .ID }}/delete" method="post"
+                onsubmit="return confirm('Delete this bookmark?');">
+                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{{ end }}

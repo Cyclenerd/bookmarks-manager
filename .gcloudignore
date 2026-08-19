@@ -1,6 +1,30 @@
+# .gcloudignore controls which files are uploaded to Cloud Build by
+# `gcloud builds submit`. The build runs `docker build .` from the repo root,
+# so only the files needed by the Go build (see Dockerfile) must be uploaded.
+#
+# Strategy: ignore everything, then re-include exactly what the build needs.
 **
-!app/**
-!config.py
-!run.py
-!requirements.txt
+
+# Go module definition and sources
+!go.mod
+!go.sum
+!cmd/**
+!internal/**
+
+# Embedded templates and static assets (go:embed in web/)
+!web/**
+
+# Container build file
 !Dockerfile
+
+# Re-exclude things that live under the re-included paths but must not ship:
+# runtime favicon cache (downloaded at runtime) and any local SQLite files.
+web/static/favicons/*
+!web/static/favicons/.gitkeep
+**/*.db
+**/*.db-journal
+**/*.db-wal
+**/*.db-shm
+
+# Never upload test files or local build artifacts.
+**/*_test.go

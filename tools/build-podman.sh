@@ -10,13 +10,13 @@ NC='\033[0m' # No Color
 
 # Check if Podman is installed
 if ! command -v podman &> /dev/null; then
-	echo "${RED}Error: Podman is not installed. Please install it to continue.${NC}" >&2
+	echo -e "${RED}Error: Podman is not installed. Please install it to continue.${NC}" >&2
 	exit 1
 fi
 
 # Check if required files exist
 if [ ! -f "../Dockerfile" ]; then
-	echo "${RED}Error: This command must be executed in the tools directory.${NC}" >&2
+	echo -e "${RED}Error: This command must be executed in the tools directory.${NC}" >&2
 	echo "Required Dockerfile in parent directory not found."
 	exit 1
 fi

@@ -1,0 +1,87 @@
+{{ define "content" }}
+<div class="search-container mb-4">
+    <form action="/search" method="get" id="searchForm">
+        <input type="search" class="form-control" id="liveSearch" name="q" placeholder="Search bookmarks..."
+            value="{{ .Query }}" autocomplete="off">
+    </form>
+    <div class="search-results d-none" id="searchResults">
+        <div class="list-group list-group-flush"></div>
+    </div>
+</div>
+
+<main>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h4><i class="bi bi-search"></i> Search Results</h4>
+            <p class="text-body-secondary mb-0">
+                {{ if .Query }}
+                Found {{ .Total }} bookmark{{ if ne .Total 1 }}s{{ end }} for "{{ .Query }}"{{ if gt .Total 0 }} (showing {{ .ShowingFrom }}-{{ .ShowingTo }}){{ end }}
+                {{ else }}
+                Enter a search query
+                {{ end }}
+            </p>
+        </div>
+        {{ if .Bookmarks }}
+        <div class="btn-group" role="group">
+            <a href="/search?q={{ .Query }}&sort=title&order={{ .TitleOrder }}&page={{ .Page }}"
+                class="btn btn-sm btn-outline-secondary{{ if eq .SortBy "title" }} active{{ end }}">
+                <i class="bi bi-sort-alpha-{{ if and (eq .SortBy "title") (eq .SortOrder "asc") }}up{{ else }}down{{ end }}"></i> Title
+            </a>
+            <a href="/search?q={{ .Query }}&sort=url&order={{ .URLOrder }}&page={{ .Page }}"
+                class="btn btn-sm btn-outline-secondary{{ if eq .SortBy "url" }} active{{ end }}">
+                <i class="bi bi-link-45deg"></i> URL
+            </a>
+            <a href="/search?q={{ .Query }}&sort=created_at&order={{ .DateOrder }}&page={{ .Page }}"
+                class="btn btn-sm btn-outline-secondary{{ if eq .SortBy "created_at" }} active{{ end }}">
+                <i class="bi bi-calendar"></i> Date
+            </a>
+        </div>
+        {{ end }}
+    </div>
+
+    {{ if .Bookmarks }}
+    <div class="list-group">
+        {{ range .Bookmarks }}
+        {{ template "bookmarkCard" . }}
+        {{ end }}
+    </div>
+
+    {{ if gt .TotalPages 1 }}
+    <nav aria-label="Search results pagination" class="mt-4">
+        <ul class="pagination justify-content-center">
+            <li class="page-item{{ if eq .Page 1 }} disabled{{ end }}">
+                <a class="page-link" href="/search?q={{ .Query }}&sort={{ .SortBy }}&order={{ .SortOrder }}&page={{ .PrevPage }}">
+                    <i class="bi bi-chevron-left"></i><span class="visually-hidden">Previous</span>
+                </a>
+            </li>
+            {{ range .PageNumbers }}
+                {{ if eq . -1 }}
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+                {{ else }}
+                <li class="page-item{{ if eq . $.Page }} active{{ end }}">
+                    <a class="page-link" href="/search?q={{ $.Query }}&sort={{ $.SortBy }}&order={{ $.SortOrder }}&page={{ . }}">{{ . }}</a>
+                </li>
+                {{ end }}
+            {{ end }}
+            <li class="page-item{{ if eq .Page .TotalPages }} disabled{{ end }}">
+                <a class="page-link" href="/search?q={{ .Query }}&sort={{ .SortBy }}&order={{ .SortOrder }}&page={{ .NextPage }}">
+                    <span class="visually-hidden">Next</span><i class="bi bi-chevron-right"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
+    {{ end }}
+    {{ else if .Query }}
+    <div class="text-center py-5">
+        <i class="bi bi-search display-1 text-body-secondary"></i>
+        <p class="text-body-secondary mt-3">No bookmarks found matching "{{ .Query }}"</p>
+        <a href="/" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back to all bookmarks</a>
+    </div>
+    {{ else }}
+    <div class="text-center py-5">
+        <i class="bi bi-search display-1 text-body-secondary"></i>
+        <p class="text-body-secondary mt-3">Enter a search query to find bookmarks</p>
+    </div>
+    {{ end }}
+</main>
+{{ end }}

@@ -1,0 +1,156 @@
+{{ define "content" }}
+<div class="search-container mb-4">
+    <form action="/search" method="get" id="searchForm">
+        <input type="search" class="form-control" id="liveSearch" name="q" placeholder="Search bookmarks..."
+            autocomplete="off">
+    </form>
+    <div class="search-results d-none" id="searchResults">
+        <div class="list-group list-group-flush"></div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <nav class="col-md-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="text-body-secondary mb-0">Folders</h6>
+            <a href="/folder/add" class="btn btn-sm btn-link"><i class="bi bi-plus"></i></a>
+        </div>
+        <div class="list-group list-group-flush mb-4">
+            <a href="/?sort={{ .SortBy }}&order={{ .SortOrder }}"
+                class="list-group-item list-group-item-action d-flex justify-content-between align-items-center{{ if and (not .CurrentFolder) (not .CurrentTag) (not .IsUnfiled) }} active{{ end }}">
+                <span><i class="bi bi-grid"></i> All Bookmarks</span>
+            </a>
+            <a href="/?folder=unfiled&sort={{ .SortBy }}&order={{ .SortOrder }}"
+                class="list-group-item list-group-item-action d-flex justify-content-between align-items-center{{ if .IsUnfiled }} active{{ end }}">
+                <span><i class="bi bi-inbox"></i> Unfiled</span>
+            </a>
+            {{ range .Folders }}
+            {{ template "folderNav" (navRoot $ .) }}
+            {{ end }}
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="text-body-secondary mb-0">Tags</h6>
+            <a href="/tag/add" class="btn btn-sm btn-link"><i class="bi bi-plus"></i></a>
+        </div>
+        <div class="list-group list-group-flush">
+            {{ range .Tags }}
+            <a href="/?tag={{ .ID }}&sort={{ $.SortBy }}&order={{ $.SortOrder }}"
+                class="list-group-item list-group-item-action d-flex justify-content-between align-items-center{{ if and $.CurrentTag (eq $.CurrentTag.ID .ID) }} active{{ end }}">
+                <span><i class="bi bi-tag"></i> {{ .Name }}</span>
+                <span class="badge bg-secondary rounded-pill">{{ .BookmarkCount }}</span>
+            </a>
+            {{ end }}
+        </div>
+
+        <div class="mt-4 pt-4 border-top d-none d-md-block">
+            <h6 class="text-body-secondary mb-2">Import &amp; Export</h6>
+            <a href="/import" class="btn btn-outline-secondary btn-sm w-100 mb-2">
+                <i class="bi bi-arrow-down-up"></i> Import/Export
+            </a>
+
+            <h6 class="text-body-secondary mb-2 mt-3">Bookmarklet</h6>
+            <p class="small text-body-secondary mb-2">Drag the button below to your bookmarks bar to quickly add any
+                page:</p>
+            <a href="javascript:(function(){var url=encodeURIComponent(window.location.href);var title=encodeURIComponent(document.title);window.open('{{ .BaseURL }}/bookmark/add?url='+url+'&title='+title, '_blank');})()"
+                class="btn btn-outline-secondary btn-sm w-100">
+                <i class="bi bi-plus-lg"></i> Add Bookmarklet
+            </a>
+        </div>
+    </nav>
+
+    <main class="col-md-9">
+        <div class="d-flex justify-content-between flex-wrap align-items-center pb-3 mb-3 border-bottom">
+            <h2 class="h4 mb-0 d-flex align-items-center gap-2">
+                {{ if .CurrentFolder }}
+                    {{ if .CurrentFolder.ParentChain }}
+                    <ol class="breadcrumb mb-0">
+                        {{ range .CurrentFolder.ParentChain }}
+                        <li class="breadcrumb-item"><a
+                                href="/?folder={{ .ID }}&sort={{ $.SortBy }}&order={{ $.SortOrder }}">{{ .Name }}</a></li>
+                        {{ end }}
+                        <li class="breadcrumb-item active" aria-current="page">{{ .CurrentFolder.Name }}</li>
+                    </ol>
+                    {{ else }}
+                    {{ .CurrentFolder.Name }}
+                    {{ end }}
+                    <a href="/folder/{{ .CurrentFolder.ID }}/edit" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    <a href="/folder/add?parent={{ .CurrentFolder.ID }}" class="btn btn-sm btn-outline-secondary" title="Add subfolder">
+                        <i class="bi bi-folder-plus"></i>
+                    </a>
+                {{ else if .CurrentTag }}
+                    <i class="bi bi-tag"></i> {{ .CurrentTag.Name }}
+                    <a href="/tag/{{ .CurrentTag.ID }}/edit" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                {{ else if .IsUnfiled }}
+                    <i class="bi bi-inbox"></i> Unfiled Bookmarks
+                {{ else }}
+                    All Bookmarks
+                {{ end }}
+            </h2>
+            <div class="btn-group mt-2 mt-sm-0">
+                <a href="/?{{ .FilterQuery }}&sort=title&order={{ .TitleOrder }}"
+                    class="btn btn-sm btn-outline-secondary{{ if eq .SortBy "title" }} active{{ end }}">
+                    <i class="bi bi-sort-alpha-{{ if and (eq .SortBy "title") (eq .SortOrder "asc") }}up{{ else }}down{{ end }}"></i> Title
+                </a>
+                <a href="/?{{ .FilterQuery }}&sort=url&order={{ .URLOrder }}"
+                    class="btn btn-sm btn-outline-secondary{{ if eq .SortBy "url" }} active{{ end }}">
+                    <i class="bi bi-link-45deg"></i> URL
+                </a>
+                <a href="/?{{ .FilterQuery }}&sort=created_at&order={{ .DateOrder }}"
+                    class="btn btn-sm btn-outline-secondary{{ if eq .SortBy "created_at" }} active{{ end }}">
+                    <i class="bi bi-calendar"></i> Date
+                </a>
+            </div>
+        </div>
+
+        {{ if .Bookmarks }}
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <small class="text-body-secondary">Showing {{ .ShowingFrom }}-{{ .ShowingTo }} of {{ .Total }} bookmarks</small>
+        </div>
+        <div class="list-group">
+            {{ range .Bookmarks }}
+            {{ template "bookmarkCard" . }}
+            {{ end }}
+        </div>
+
+        {{ if gt .TotalPages 1 }}
+        <nav aria-label="Bookmark pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+                <li class="page-item{{ if eq .Page 1 }} disabled{{ end }}">
+                    <a class="page-link" href="/?{{ .FilterQuery }}&sort={{ .SortBy }}&order={{ .SortOrder }}&page={{ .PrevPage }}">
+                        <i class="bi bi-chevron-left"></i><span class="visually-hidden">Previous</span>
+                    </a>
+                </li>
+                {{ range .PageNumbers }}
+                    {{ if eq . -1 }}
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                    {{ else }}
+                    <li class="page-item{{ if eq . $.Page }} active{{ end }}">
+                        <a class="page-link" href="/?{{ $.FilterQuery }}&sort={{ $.SortBy }}&order={{ $.SortOrder }}&page={{ . }}">{{ . }}</a>
+                    </li>
+                    {{ end }}
+                {{ end }}
+                <li class="page-item{{ if eq .Page .TotalPages }} disabled{{ end }}">
+                    <a class="page-link" href="/?{{ .FilterQuery }}&sort={{ .SortBy }}&order={{ .SortOrder }}&page={{ .NextPage }}">
+                        <span class="visually-hidden">Next</span><i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        {{ end }}
+        {{ else }}
+        <div class="text-center py-5">
+            <i class="bi bi-inbox display-1 text-body-secondary"></i>
+            <p class="text-body-secondary mt-3">
+                No bookmarks found.
+                <a href="/bookmark/add{{ if .CurrentFolderParam }}?folder={{ .CurrentFolderParam }}{{ end }}">Add bookmark!</a>
+            </p>
+        </div>
+        {{ end }}
+    </main>
+</div>
+{{ end }}

@@ -14,13 +14,23 @@ charset = utf-8
 indent_style = space
 indent_size = 2
 
+# Go uses tabs (enforced by gofmt)
+[*.go]
+indent_style = tab
+indent_size = 4
+
 # 4 space indentation
-[*.{py,html}]
+[*.html]
 indent_style = space
 indent_size = 4
 
 # 4 tab indentation
 [*.{pl,sh}]
+indent_style = tab
+indent_size = 4
+
+# go.mod / go.sum use tabs
+[go.{mod,sum}]
 indent_style = tab
 indent_size = 4
 
