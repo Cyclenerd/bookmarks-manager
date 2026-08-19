@@ -9,33 +9,39 @@ on:
   workflow_dispatch:
 
 jobs:
-  python:
-    name: "Python 🐍"
+  go:
+    name: "Go 🐹"
     runs-on: ubuntu-latest
     steps:
       - name: 🛎️ Checkout
         uses: actions/checkout@v7
 
-      - name: 🐍 Set up Python
-        uses: actions/setup-python@v7
+      - name: 🐹 Set up Go
+        uses: actions/setup-go@v6
         with:
-          python-version: '3.14'
-          cache: 'pip'
+          go-version: '1.26'
+          cache: true
 
-      - name: 📥 Install dependencies
-        run: |
-          pip install -r requirements.txt
-          pip install -r requirements-dev.txt
+      - name: 📥 Download dependencies
+        run: go mod download
 
-      - name: 🔍 Lint with flake8
+      - name: 🔍 Check formatting
         run: |
-          flake8 --ignore=W292,W503 --max-line-length=127 --show-source --statistics \
-            *.py app/*.py app/routes/*.py app/services/*.py app/utils/*.py \
-            tests/*.py tests/integration/*.py tests/unit/*.py
+          unformatted="$(gofmt -l .)"
+          if [ -n "$unformatted" ]; then
+            echo "The following files are not gofmt-formatted:"
+            echo "$unformatted"
+            exit 1
+          fi
+
+      - name: 🔍 Vet
+        run: go vet ./...
+
+      - name: 🏗️ Build
+        run: go build ./...
 
       - name: 🧪 Run tests
-        run: |
-          python -m pytest tests/ --cov
+        run: go test -race -cover ./...
 
   terraform:
     name: "Terraform 🏗️"
@@ -85,7 +91,7 @@ jobs:
 
   docker:
     name: "Docker 🐳"
-    needs: [python, terraform, shell]
+    needs: [go, terraform, shell]
     runs-on: ubuntu-latest
     steps:
       - name: 🛎️ Checkout
@@ -97,14 +103,13 @@ jobs:
 
       - name: 🔐 Set permissions for volumes
         run: |
-          mkdir -p database app/static/favicons
-          chmod -R 777 database app/static/favicons
+          mkdir -p database
+          chmod -R 777 database
 
       - name: 🚀 Start Docker container
         run: |
           docker run -d -p 8080:8080 \
-            -v $(pwd)/database:/web/database:rw \
-            -v $(pwd)/app/static/favicons:/web/app/static/favicons:rw \
+            -v $(pwd)/database:/var/lib/bookmarks:rw \
             --name bookmarks-manager bookmarks-manager
 
       - name: ⏳ Wait for container to be ready

@@ -1,78 +1,43 @@
-# Use the official Python image as a base image
-# Using a specific version makes the build deterministic
-ARG PYTHON_VERSION=3.14-alpine
+# syntax=docker/dockerfile:1
 
 # --- Build Stage ---
-# This stage builds the Python dependencies
-FROM docker.io/library/python:${PYTHON_VERSION} AS builder
+# Compiles a static Go binary. Templates and static assets are embedded into
+# the binary via go:embed, so the final image only needs the binary itself.
+ARG GO_VERSION=1.26
+FROM docker.io/library/golang:${GO_VERSION}-alpine AS builder
 
-# Set environment variables for Python
-# PYTHONUNBUFFERED: Log messages immediately without buffering
-# PIP_DISABLE_PIP_VERSION_CHECK: Reduce runtime by disabling pip version check
-ENV PYTHONUNBUFFERED=True
-ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+WORKDIR /src
 
-# Set the working directory in the container
-WORKDIR /app
+# Cache dependencies separately from source for faster rebuilds.
+COPY go.mod go.sum ./
+RUN go mod download
 
-# Install build dependencies required for some Python packages
-RUN apk add --no-cache build-base
-
-# Copy the requirements file for the web app and install dependencies
-# Using a wheelhouse allows for faster installation in the final image
-COPY requirements.txt .
-RUN pip wheel --no-cache-dir --wheel-dir /wheels -r requirements.txt
-
-# --- Production Stage ---
-# This stage creates the final production image
-FROM docker.io/library/python:${PYTHON_VERSION}
-
-# Set environment variables for Python
-# PYTHONUNBUFFERED: Log messages immediately without buffering
-# PIP_DISABLE_PIP_VERSION_CHECK: Reduce runtime by disabling pip version check
-ENV PYTHONUNBUFFERED=True
-ENV PIP_DISABLE_PIP_VERSION_CHECK=1
-
-# Set the port the application will run on
-ENV PORT=8080
-# Configure Gunicorn server arguments for production
-# --bind: Bind to all network interfaces on the specified port
-# --workers: Number of worker processes
-# --threads: Number of threads per worker
-# --timeout: Timeout for worker processes
-# Source: https://cloud.google.com/run/docs/tips/python#optimize_gunicorn
-ENV GUNICORN_CMD_ARGS="--bind 0.0.0.0:$PORT --workers 1 --threads 8 --timeout 0"
-
-# Configure Flask application settings
-# FLASK_ENV: Set the environment to production
-# DEBUG: Disable debugging
-ENV FLASK_ENV="production"
-ENV DEBUG=False
-
-# Expose the port the application runs on
-EXPOSE $PORT
-
-# Set the working directory in the container
-WORKDIR /web
-
-# Create a non-root user and group for security
-RUN addgroup -S appuser && adduser -S -G appuser appuser
-
-# Copy the built Python wheels from the builder stage
-COPY --from=builder /wheels /wheels
-
-# Copy the application code into the container
+# Copy the remainder of the source (including web/ for go:embed).
 COPY . .
 
-# Install the Python dependencies from the wheels and clean up
-RUN pip install --no-cache-dir /wheels/* && rm -rf /wheels
+# CGO is disabled: modernc.org/sqlite is pure Go, so no C toolchain is needed.
+ENV CGO_ENABLED=0
+RUN go build -trimpath -ldflags="-s -w" -o /bin/bookmarks ./cmd/bookmarks
 
-# Set appropriate permissions
-RUN chown -R appuser:appuser /web
+# --- Production Stage ---
+FROM docker.io/library/alpine:3.20
 
-# Switch to the non-root user for security
+# CA certificates are required for outbound HTTPS (favicon/metadata fetching).
+RUN apk add --no-cache ca-certificates && \
+    addgroup -S appuser && adduser -S -G appuser appuser
+
+ENV HTTP_PORT=8080 \
+    DEBUG=false \
+    DATABASE_PATH=/var/lib/bookmarks/bookmarks.db \
+    FAVICON_CACHE_DIR=/var/lib/bookmarks/favicons
+
+WORKDIR /app
+COPY --from=builder /bin/bookmarks /app/bookmarks
+
+# Data directory for the SQLite database and favicon cache (mount a volume).
+RUN mkdir -p /var/lib/bookmarks/favicons && chown -R appuser:appuser /var/lib/bookmarks /app
+
 USER appuser
+EXPOSE 8080
 
-# Set the command to run the application using Gunicorn
-# This command starts the Gunicorn server and runs the Flask app
-CMD ["gunicorn", "run:app"]
+ENTRYPOINT ["/app/bookmarks"]

@@ -1,0 +1,197 @@
+{{ define "base" }}<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bookmarks Manager</title>
+    <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/css/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+
+<body>
+    <nav class="navbar bg-body-tertiary">
+        <div class="container">
+            <a href="/" class="navbar-brand"><i class="bi bi-bookmark-star"></i> Bookmarks</a>
+            <a href="/bookmark/add{{ if .CurrentFolderParam }}?folder={{ .CurrentFolderParam }}{{ end }}"
+                class="btn btn-sm btn-success">
+                <i class="bi bi-plus-lg"></i> Add [g+n]
+            </a>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        {{ template "content" . }}
+    </div>
+
+    <script>
+        (function () {
+            const searchInput = document.getElementById('liveSearch');
+            const searchResults = document.getElementById('searchResults');
+            let gPressed = false;
+            let gTimeout;
+
+            const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+
+            document.addEventListener('keydown', function (e) {
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                    return;
+                }
+                if (e.key === 'g' || e.key === 'G') {
+                    gPressed = true;
+                    clearTimeout(gTimeout);
+                    gTimeout = setTimeout(() => { gPressed = false; }, 1000);
+                } else if (gPressed && (e.key === 'n' || e.key === 'N')) {
+                    e.preventDefault();
+                    const folder = new URLSearchParams(window.location.search).get('folder');
+                    const url = folder
+                        ? `/bookmark/add?folder=${encodeURIComponent(folder)}`
+                        : `/bookmark/add`;
+                    window.location.href = url;
+                    gPressed = false;
+                }
+            });
+
+            if (searchInput && searchResults) {
+                let searchTimeout;
+                let currentFocus = -1;
+
+                const shortcut = isMac ? '⌘+/' : 'Ctrl+/';
+                searchInput.placeholder = `Search bookmarks... [${shortcut}]`;
+
+                document.addEventListener('keydown', function (e) {
+                    const modifierKey = isMac ? e.metaKey : e.ctrlKey;
+                    if (modifierKey && e.key === '/') {
+                        e.preventDefault();
+                        searchInput.focus();
+                        searchInput.select();
+                    }
+                });
+
+                searchInput.addEventListener('input', function () {
+                    clearTimeout(searchTimeout);
+                    const query = this.value.trim();
+                    if (query.length < 2) {
+                        searchResults.classList.add('d-none');
+                        return;
+                    }
+                    searchTimeout = setTimeout(() => { performSearch(query); }, 300);
+                });
+
+                searchInput.addEventListener('keydown', function (e) {
+                    const items = searchResults.querySelectorAll('.list-group-item');
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        currentFocus++;
+                        setActive(items);
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        currentFocus--;
+                        setActive(items);
+                    } else if (e.key === 'Enter') {
+                        if (currentFocus > -1 && items[currentFocus]) {
+                            e.preventDefault();
+                            items[currentFocus].click();
+                        }
+                    } else if (e.key === 'Escape') {
+                        searchResults.classList.add('d-none');
+                        searchInput.blur();
+                    }
+                });
+
+                searchInput.addEventListener('blur', function () {
+                    setTimeout(() => { searchResults.classList.add('d-none'); }, 200);
+                });
+
+                searchInput.addEventListener('focus', function () {
+                    if (this.value.trim().length >= 2) {
+                        performSearch(this.value.trim());
+                    }
+                });
+
+                function setActive(items) {
+                    removeActive(items);
+                    if (currentFocus >= items.length) currentFocus = 0;
+                    if (currentFocus < 0) currentFocus = items.length - 1;
+                    if (items[currentFocus]) {
+                        items[currentFocus].classList.add('active');
+                    }
+                }
+
+                function removeActive(items) {
+                    items.forEach(item => item.classList.remove('active'));
+                }
+
+                async function performSearch(query) {
+                    try {
+                        const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+                        const data = await response.json();
+                        displayResults(data.bookmarks);
+                    } catch (error) {
+                        console.error('Search error:', error);
+                    }
+                }
+
+                function displayResults(bookmarks) {
+                    const resultsContainer = searchResults.querySelector('.list-group');
+                    currentFocus = -1;
+
+                    if (!bookmarks || bookmarks.length === 0) {
+                        resultsContainer.innerHTML = '<div class="list-group-item text-center text-body-secondary">No results found</div>';
+                        searchResults.classList.remove('d-none');
+                        return;
+                    }
+
+                    let resultsHtml = bookmarks.map(bookmark => {
+                        const favicon = bookmark.favicon
+                            ? `<img src="/static/${bookmark.favicon}" class="favicon" alt="">`
+                            : '<i class="bi bi-bookmark"></i>';
+                        const folder = bookmark.folder_name
+                            ? `<span class="badge text-bg-primary ms-2"><i class="bi bi-folder"></i> ${escapeHtml(bookmark.folder_name)}</span>`
+                            : '';
+
+                        return `
+                        <a href="${bookmark.url}" class="list-group-item list-group-item-action" target="_blank" rel="noopener noreferrer">
+                            <div class="d-flex align-items-start">
+                                <div class="me-2">${favicon}</div>
+                                <div class="flex-grow-1 min-w-0">
+                                    <div class="d-flex align-items-center">
+                                        <strong class="text-truncate">${escapeHtml(bookmark.title)}</strong>
+                                        ${folder}
+                                    </div>
+                                    <small class="text-body-secondary text-break">${escapeHtml(bookmark.url)}</small>
+                                </div>
+                            </div>
+                        </a>`;
+                    }).join('');
+
+                    resultsHtml += `
+                    <a href="/search?q=${encodeURIComponent(searchInput.value.trim())}"
+                       class="list-group-item list-group-item-action text-center">
+                        <i class="bi bi-search"></i> View all results
+                    </a>`;
+
+                    resultsContainer.innerHTML = resultsHtml;
+                    searchResults.classList.remove('d-none');
+                }
+
+                function escapeHtml(text) {
+                    const div = document.createElement('div');
+                    div.textContent = text;
+                    return div.innerHTML;
+                }
+
+                document.addEventListener('click', function (e) {
+                    if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                        searchResults.classList.add('d-none');
+                    }
+                });
+            }
+        })();
+    </script>
+    {{ block "scripts" . }}{{ end }}
+</body>
+
+</html>
+{{ end }}

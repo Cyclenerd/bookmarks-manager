@@ -1,0 +1,18 @@
+{{ define "content" }}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="alert alert-success" role="alert">
+            <h4 class="alert-heading"><i class="bi bi-check-circle"></i> Import Successful!</h4>
+            <hr>
+            <p class="mb-0">
+                Imported <strong>{{ .Stats.Bookmarks }}</strong> bookmarks,
+                <strong>{{ .Stats.Folders }}</strong> folders, and
+                <strong>{{ .Stats.Tags }}</strong> new tags.
+            </p>
+        </div>
+        <div class="mt-4">
+            <a href="/import" class="btn btn-primary">Import More</a>
+        </div>
+    </div>
+</div>
+{{ end }}

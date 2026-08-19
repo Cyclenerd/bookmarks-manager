@@ -2,7 +2,7 @@ First off, thanks for taking the time to contribute!
 
 ## Please Complete the Following
 
-- [ ] I read [CONTRIBUTING.md](https://github.com/Cyclenerd/google-cloud-github-runner/blob/master/CONTRIBUTING.md)
+- [ ] I read [CONTRIBUTING.md](https://github.com/Cyclenerd/bookmarks-manager/blob/master/CONTRIBUTING.md)
 
 ## Notes
 

@@ -1,7 +1,6 @@
-version: '3.8'
 services:
   web:
-    platform: linux/amd64
+    build: .
     image: localhost/bookmarks-manager:latest
     ports:
       - "8080:8080"
@@ -9,6 +8,7 @@ services:
       - HTTP_AUTH_USERNAME=admin
       - HTTP_AUTH_PASSWORD=changeme
       - DATABASE_PATH=/var/lib/bookmarks/bookmarks.db
+      - FAVICON_CACHE_DIR=/var/lib/bookmarks/favicons
     volumes:
       - ./database:/var/lib/bookmarks:rw
-      - ./app/static/favicons:/web/app/static/favicons:rw
+    restart: unless-stopped

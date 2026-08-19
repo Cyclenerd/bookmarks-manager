@@ -2,13 +2,15 @@
 
 [![Badge: Linux](https://img.shields.io/badge/Linux-FCC624.svg?logo=linux&logoColor=black)](#readme)
 [![Badge: Terraform](https://img.shields.io/badge/Terraform-%235835CC.svg?logo=terraform&logoColor=white)](#readme)
-[![Badge: Python](https://img.shields.io/badge/Python-3670A0?logo=python&logoColor=ffdd54)](#readme)
+[![Badge: Go](https://img.shields.io/badge/Go-00ADD8?logo=go&logoColor=white)](#readme)
 [![Badge: Docker](https://img.shields.io/badge/Docker-%230db7ed.svg?logo=docker&logoColor=white)](#readme)
 [![Badge: Podman](https://img.shields.io/badge/Podman-%23892CA0.svg?logo=podman&logoColor=white)](#readme)
 [![Badge: Kubernetes](https://img.shields.io/badge/Kubernetes-%23326ce5.svg?logo=kubernetes&logoColor=white)](#readme)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
 Bookmarks Manager is a lightweight, self-hosted bookmarking solution designed for speed and simplicity. Optimized for a single user, it features a simple SQLite backend and single user HTTP Basic Authentication, making it incredibly easy to deploy and maintain.
+
+Written in Go, it ships as a single self-contained binary with all templates and static assets embedded, so there are no runtime dependencies to install.
 
 Take control of your web links with a powerful organization system, lightning-fast search, and a mobile-friendly interface.
 
@@ -45,11 +47,14 @@ Take control of your web links with a powerful organization system, lightning-fa
 - **Preserves Structure**: Maintains folder hierarchy and tags during import/export
 
 ### 🔒 Security
-- **HTTP Basic Authentication**: Simple username/password protection
+- **HTTP Basic Authentication**: Simple username/password protection (constant-time comparison)
 - **UUID-based IDs**: Uses UUIDs instead of sequential integers for all resources
+- **Security Headers**: Sensible defaults (CSP, HSTS, X-Frame-Options, ...) on every response
+- **Rate Limiting**: Built-in per-client-IP rate limiting
 
 ### ⚡ Performance
-- **SQLite Database**: Lightweight, serverless database
+- **Single Binary**: Ships as one self-contained Go binary (templates and assets embedded)
+- **SQLite Database**: Lightweight, serverless database (pure-Go driver, no CGO)
 - **Favicon Caching**: Favicons cached locally to avoid repeated fetches
 - **Optimized Queries**: Efficient database queries with proper indexing
 
@@ -58,7 +63,7 @@ Take control of your web links with a powerful organization system, lightning-fa
 You can run the application locally or deploy it to a cloud platform like Google Cloud Platform.
 
 The complete application is containerized and can be run with Docker, Podman or Kubernetes.
-You can also run it locally with Python.
+You can also build and run it locally with Go.
 Deploying and running the application via a container is recommended.
 
 **Clone the repository**:
@@ -72,28 +77,38 @@ cd bookmarks-manager
 
 Prerequisites:
 
-*   Python 3
-*   pip
-*   SQLite
+*   Go 1.26 or newer
 
-1.  **Create and activate a virtual environment**:
+No external database server is required; SQLite is embedded via a pure-Go driver.
+
+1.  **Build the binary** (templates and static assets are embedded):
 
     ```bash
-    python3 -m venv .venv
-    source .venv/bin/activate
+    go build -o bookmarks ./cmd/bookmarks
     ```
 
-2.  **Install the required dependencies**:
+2.  **Run the application**:
 
     ```bash
-    pip3 install -r requirements.txt
-    pip3 install -r requirements-dev.txt
+    HTTP_AUTH_PASSWORD=changeme ./bookmarks
     ```
 
-3.  **Run the application**:
+    Or run directly without producing a binary:
 
     ```bash
-    python3 run.py
+    go run ./cmd/bookmarks
+    ```
+
+3.  **Run the test suite**:
+
+    ```bash
+    go test ./...
+    ```
+
+4.  **Format and vet**:
+
+    ```bash
+    gofmt -w ./... && go vet ./...
     ```
 
 ## Containerization with Docker or Podman
@@ -118,13 +133,12 @@ docker save -o bookmarks-manager.tar bookmarks-manager
 
 ### Run the Container
 
-To ensure your data persists, you need to mount the `./database` and `./app/static/favicons` directories from your host to the container.
+To ensure your data persists, mount the `./database` directory from your host to the container. The SQLite database and the favicon cache are both stored under `/var/lib/bookmarks` inside the container.
 
 ```bash
 docker run -d -p 8080:8080 \
   --platform "linux/amd64" \
-  -v $(pwd)/database:/web/database:rw \
-  -v $(pwd)/app/static/favicons:/web/app/static/favicons:rw \
+  -v $(pwd)/database:/var/lib/bookmarks:rw \
   --name bookmarks-manager localhost/bookmarks-manager:latest
 ```
 
@@ -170,7 +184,7 @@ cp .env.example .env
 nano .env
 ```
 
-The `.env` file is automatically loaded by python-dotenv and is ignored by git for security.
+The `.env.example` file lists all available settings. Copy it to `.env` for reference; note that the binary reads its configuration from the process environment, so export the variables (for example with a tool like [`direnv`](https://direnv.net/) or your process manager) before starting the app.
 
 ### Required Settings
 
@@ -183,20 +197,22 @@ The `.env` file is automatically loaded by python-dotenv and is ignored by git f
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `SECRET_KEY` | Flask secret key for session security | generate with `secrets.token_hex(32)` |
-| `DATABASE_PATH` | SQLite database file path | `database/bookmarks.db` |
+| `SECRET_KEY` | Secret key reserved for future signing needs | random on startup |
+| `DATABASE_PATH` | SQLite database file path (`:memory:` for tests) | `database/bookmarks.db` |
 | `HTTP_PORT` | HTTP server port | `8080` |
-| `FAVICON_CACHE_DIR` | Directory for favicon cache storage | `app/static/favicons` |
-| `RATELIMIT_STORAGE_URI` | Rate limit storage backend (memory or Redis) | `memory://` |
-| `RATELIMIT_DEFAULT` | Default rate limits for all endpoints | `100 per minute` |
+| `DEBUG` | Enable verbose (debug) logging | `true` |
+| `FAVICON_CACHE_DIR` | Directory for favicon cache storage | `web/static/favicons` |
+| `RATELIMIT_PER_MINUTE` | Requests per minute per client IP | `100` |
 
 ### Rate Limiting
 
-Flask-Limiter is configured to protect against abuse. Configure via environment variables:
+A built-in, in-memory rate limiter protects against abuse. It is keyed by client
+IP address and uses a fixed one-minute window.
 
-- **In-memory storage** (default): `RATELIMIT_STORAGE_URI=memory://`
-- **Redis storage**: `RATELIMIT_STORAGE_URI=redis://localhost:6379`
-- **Custom limits**: `RATELIMIT_DEFAULT="100 per day, 20 per hour"`
+- **Adjust the limit**: set `RATELIMIT_PER_MINUTE` (e.g. `RATELIMIT_PER_MINUTE=200`).
+
+Because the limiter is in-memory, each instance tracks its own counters. For a
+single-user, single-instance deployment this is the intended setup.
 
 ### Example Configuration
 
@@ -235,15 +251,32 @@ export HTTP_PORT="8080"
 
 ## Documentation
 
-All Python modules are documented with comprehensive docstrings.
-View the documentation using Python's built-in pydoc:
+All Go packages, exported types and functions are documented with doc comments.
+View the documentation using the built-in `go doc` tool:
 
 ```bash
-# View module documentation
-python -m pydoc app.services.bookmark_service
+# View package documentation
+go doc ./internal/repository
 
-# Start an interactive documentation server
-python -m pydoc -b
+# View documentation for a specific type or function
+go doc ./internal/repository BookmarkRepository
+
+# Or browse everything in your editor / on pkg.go.dev-style tooling
+go doc -all ./...
+```
+
+### Project Layout
+
+```
+cmd/bookmarks/       Entrypoint, dependency wiring, graceful shutdown
+internal/config/     Environment-variable configuration
+internal/database/   SQLite connection + schema
+internal/models/     Domain types (Bookmark, Folder, Tag, ...)
+internal/repository/ Data access (SQL) for bookmarks, folders, tags
+internal/service/    Favicon, page metadata, Firefox import/export
+internal/middleware/ Auth, security headers, rate limiting
+internal/handler/    HTTP handlers, routing, template rendering
+web/                 Embedded html/template files and static assets
 ```
 
 ## License

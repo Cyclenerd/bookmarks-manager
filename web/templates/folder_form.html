@@ -1,0 +1,50 @@
+{{ define "content" }}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+        <h2 class="mb-4">
+            <i class="bi bi-{{ if .Folder }}pencil{{ else }}plus-lg{{ end }}"></i>
+            {{ if .Folder }}Edit{{ else }}Add{{ end }} Folder
+            {{ if .ParentFolder }}in {{ .ParentFolder.Name }}{{ end }}
+        </h2>
+
+        <form action="/folder/save" method="post">
+            {{ if .ReturnURL }}<input type="hidden" name="return_url" value="{{ .ReturnURL }}">{{ end }}
+            {{ if .Folder }}<input type="hidden" name="folder_id" value="{{ .Folder.ID }}">{{ end }}
+
+            <div class="mb-3">
+                <label for="name" class="form-label">Name *</label>
+                <input type="text" class="form-control" id="name" name="name"
+                    value="{{ if .Folder }}{{ .Folder.Name }}{{ end }}" required autofocus>
+            </div>
+
+            <div class="mb-3">
+                <label for="parent_id" class="form-label">Parent Folder</label>
+                <select class="form-select" id="parent_id" name="parent_id">
+                    <option value="">No Folder</option>
+                    {{ range .Folders }}
+                    {{ template "folderOption" (optRoot $ .) }}
+                    {{ end }}
+                </select>
+                <div class="form-text">Cannot select itself or its subfolders</div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Save</button>
+                <a href="{{ if .ReturnURL }}{{ .ReturnURL }}{{ else }}/{{ end }}" class="btn btn-secondary">
+                    <i class="bi bi-x-lg"></i> Cancel
+                </a>
+                {{ if .Folder }}
+                <button type="button" class="btn btn-outline-danger ms-auto"
+                    onclick="if(confirm('Delete this folder and all subfolders? Bookmarks will not be deleted.')) document.getElementById('deleteForm').submit();">
+                    <i class="bi bi-trash"></i> Delete
+                </button>
+                {{ end }}
+            </div>
+        </form>
+
+        {{ if .Folder }}
+        <form id="deleteForm" action="/folder/{{ .Folder.ID }}/delete" method="post" style="display:none;"></form>
+        {{ end }}
+    </div>
+</div>
+{{ end }}
