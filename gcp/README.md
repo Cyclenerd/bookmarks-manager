@@ -227,7 +227,7 @@ terraform destroy
 
 | Name | Version |
 |------|---------|
-| <a name="provider_google"></a> [google](#provider\_google) | >= 7.17.0, < 8.0.0 |
+| <a name="provider_google"></a> [google](#provider\_google) | >= 7.40.0, < 8.0.0 |
 | <a name="provider_local"></a> [local](#provider\_local) | >= 2.6.0, < 3.0.0 |
 | <a name="provider_null"></a> [null](#provider\_null) | >= 3.2.4, < 4.0.0 |
 | <a name="provider_time"></a> [time](#provider\_time) | >= 0.13.1, < 1.0.0 |
@@ -247,5 +247,5 @@ terraform destroy
 
 | Name | Description |
 |------|-------------|
-| <a name="output_bookmarks_manager_url"></a> [bookmarks\_manager\_url](#output\_bookmarks\_manager\_url) | Service URL of the Bookmarks Manager (Cloud Run) https://github.com/GoogleCloudPlatform/cloud-foundation-fabric/blob/v53.0.0/modules/cloud-run-v2/README.md#outputs |
+| <a name="output_bookmarks_manager_url"></a> [bookmarks\_manager\_url](#output\_bookmarks\_manager\_url) | Service URL of the Bookmarks Manager (Cloud Run) https://github.com/GoogleCloudPlatform/cloud-foundation-fabric/blob/v57.0.0/modules/cloud-run-v2/README.md#outputs |
 <!-- END_TF_DOCS -->
