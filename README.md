@@ -6,6 +6,7 @@
 [![Badge: Docker](https://img.shields.io/badge/Docker-%230db7ed.svg?logo=docker&logoColor=white)](#readme)
 [![Badge: Podman](https://img.shields.io/badge/Podman-%23892CA0.svg?logo=podman&logoColor=white)](#readme)
 [![Badge: Kubernetes](https://img.shields.io/badge/Kubernetes-%23326ce5.svg?logo=kubernetes&logoColor=white)](#readme)
+[![Badge: Vibe coded with OpenCode](https://img.shields.io/badge/Vibe%20coded%20with-OpenCode-000000.svg)](https://opencode.ai)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
 Bookmarks Manager is a lightweight, self-hosted bookmarking solution designed for speed and simplicity. Optimized for a single user, it features a simple SQLite backend and single user HTTP Basic Authentication, making it incredibly easy to deploy and maintain.
@@ -15,6 +16,12 @@ Written in Go, it ships as a single self-contained binary with all templates and
 Take control of your web links with a powerful organization system, lightning-fast search, and a mobile-friendly interface.
 
 ![Screenshot](./img/screenshot.png)
+
+> [!NOTE]
+> This project is vibe coded with [OpenCode](https://opencode.ai). The Go
+> codebase (including the rewrite from the original Python/Flask app), tests,
+> Docker/Cloud Run configuration and documentation were produced through an
+> AI-assisted, conversational workflow.
 
 ## Features
 
