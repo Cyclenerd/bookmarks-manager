@@ -45,6 +45,19 @@ module "cloud_run_github_runners_manager" {
       env = {
         HTTP_AUTH_USERNAME = var.username
         DATABASE_PATH      = "/var/lib/bookmarks/bookmarks.db"
+        FAVICON_CACHE_DIR  = "/var/lib/icons"
+        # SQLite durability on the gcsfuse-backed database volume, where the
+        # instance can be killed (SIGKILL / preemption) at any time:
+        #   - TRUNCATE keeps an on-disk rollback journal for crash recovery.
+        #     WAL is unsafe (gcsfuse has no shared-memory support); MEMORY is
+        #     unsafe (no journal to recover a half-written transaction).
+        #   - FULL fsync()s each commit, which is what makes gcsfuse flush the
+        #     committed data up to Cloud Storage immediately.
+        #   - A single connection avoids gcsfuse's "last write wins" corruption
+        #     from concurrent writers to the same file.
+        SQLITE_JOURNAL_MODE      = "TRUNCATE"
+        SQLITE_SYNCHRONOUS       = "FULL"
+        SQLITE_SINGLE_CONNECTION = "true"
       }
       env_from_key = {
         HTTP_AUTH_PASSWORD = {
@@ -58,7 +71,7 @@ module "cloud_run_github_runners_manager" {
       }
       volume_mounts = {
         "database" = "/var/lib/bookmarks"
-        "icons"    = "/web/app/static/favicons"
+        "icons"    = "/var/lib/icons"
       }
     }
   }

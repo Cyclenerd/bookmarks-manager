@@ -199,7 +199,11 @@ The `.env.example` file lists all available settings. Copy it to `.env` for refe
 |----------|-------------|---------|
 | `SECRET_KEY` | Secret key reserved for future signing needs | random on startup |
 | `DATABASE_PATH` | SQLite database file path (`:memory:` for tests) | `database/bookmarks.db` |
-| `HTTP_PORT` | HTTP server port | `8080` |
+| `SQLITE_JOURNAL_MODE` | SQLite journal mode. `TRUNCATE`/`DELETE` are crash-safe on gcsfuse (Cloud Run); `WAL` is faster on local/persistent disk but unsafe on gcsfuse | `TRUNCATE` |
+| `SQLITE_SYNCHRONOUS` | SQLite `synchronous` setting. `FULL` fsyncs every commit (flushes to Cloud Storage on gcsfuse); `NORMAL`/`OFF` are faster but less durable | `FULL` |
+| `SQLITE_SINGLE_CONNECTION` | Force a single DB connection. Required on gcsfuse to avoid "last write wins" corruption; set `false` on local disk for more concurrency | `true` |
+| `PORT` | HTTP server port (injected by Cloud Run; takes precedence over `HTTP_PORT`) | – |
+| `HTTP_PORT` | HTTP server port (fallback when `PORT` is unset) | `8080` |
 | `DEBUG` | Enable verbose (debug) logging | `true` |
 | `FAVICON_CACHE_DIR` | Directory for favicon cache storage | `web/static/favicons` |
 | `RATELIMIT_PER_MINUTE` | Requests per minute per client IP | `100` |
@@ -213,6 +217,31 @@ IP address and uses a fixed one-minute window.
 
 Because the limiter is in-memory, each instance tracks its own counters. For a
 single-user, single-instance deployment this is the intended setup.
+
+### Database Durability (Cloud Run / gcsfuse)
+
+The Cloud Run deployment stores the SQLite database on a Cloud Storage bucket
+mounted with gcsfuse, and instances can be terminated at any time (SIGTERM
+followed by SIGKILL, or preemption). gcsfuse is not fully POSIX-compliant: it
+only uploads a file to Cloud Storage on `fsync()`/`close()`, and offers no
+locking for concurrent writers ("last write wins"). The default SQLite settings
+are chosen to be safe under these constraints:
+
+- **`SQLITE_JOURNAL_MODE=TRUNCATE`** — keeps an on-disk rollback journal so a
+  transaction interrupted mid-write can be recovered. WAL is avoided (gcsfuse
+  cannot back its shared-memory index) and `MEMORY` is avoided (a crash would
+  leave the database unrecoverable).
+- **`SQLITE_SYNCHRONOUS=FULL`** — fsyncs the database on every commit, which on
+  gcsfuse flushes the committed transaction to Cloud Storage immediately, so a
+  completed write is durable the moment the request returns.
+- **`SQLITE_SINGLE_CONNECTION=true`** — a single writer connection prevents
+  gcsfuse's "last write wins" behaviour from corrupting the file.
+
+On shutdown the service drains in-flight requests and then closes the database,
+which finalises the journal and closes the file so gcsfuse persists the final
+state. On a local or persistent disk you can trade some durability for
+throughput with `SQLITE_JOURNAL_MODE=WAL`, `SQLITE_SYNCHRONOUS=NORMAL` and
+`SQLITE_SINGLE_CONNECTION=false`.
 
 ### Example Configuration
 

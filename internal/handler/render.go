@@ -29,21 +29,30 @@ type renderer struct {
 	sets map[string]*template.Template
 }
 
-// newRenderer parses base.html, partials.html and each page template from fsys
-// into an independent template set so that per-page "content" definitions do
-// not collide.
+// newRenderer parses the shared layout (base.html + partials.html) exactly
+// once, then Clone()s it for each page and layers only that page's template on
+// top. This avoids re-parsing the shared files N times, which is the dominant
+// template cost during a cold start.
 func newRenderer(fsys fs.FS) (*renderer, error) {
 	funcs := templateFuncs()
-	sets := make(map[string]*template.Template, len(pageTemplates))
 
+	// Parse the shared layout a single time.
+	shared, err := template.New("base").Funcs(funcs).ParseFS(fsys,
+		"templates/base.html",
+		"templates/partials.html",
+	)
+	if err != nil {
+		return nil, fmt.Errorf("parse shared layout: %w", err)
+	}
+
+	sets := make(map[string]*template.Template, len(pageTemplates))
 	for _, page := range pageTemplates {
-		t := template.New("base").Funcs(funcs)
-		t, err := t.ParseFS(fsys,
-			"templates/base.html",
-			"templates/partials.html",
-			"templates/"+page,
-		)
+		// Clone the already-parsed shared layout instead of re-parsing it.
+		t, err := shared.Clone()
 		if err != nil {
+			return nil, fmt.Errorf("clone layout for %s: %w", page, err)
+		}
+		if _, err := t.ParseFS(fsys, "templates/"+page); err != nil {
 			return nil, fmt.Errorf("parse %s: %w", page, err)
 		}
 		sets[page] = t

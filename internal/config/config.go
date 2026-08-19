@@ -15,6 +15,15 @@ import (
 type Config struct {
 	// DatabasePath is the path to the SQLite database file.
 	DatabasePath string
+	// SQLiteJournalMode selects the SQLite journal mode (e.g. TRUNCATE, DELETE,
+	// WAL). Use TRUNCATE/DELETE on gcsfuse-backed volumes where WAL is unsafe.
+	SQLiteJournalMode string
+	// SQLiteSynchronous selects the SQLite synchronous setting (FULL, NORMAL,
+	// OFF). FULL is safest and flushes each commit to gcsfuse/Cloud Storage.
+	SQLiteSynchronous string
+	// SQLiteSingleConnection forces a single database connection. Required on
+	// gcsfuse-backed volumes to avoid concurrent-write corruption.
+	SQLiteSingleConnection bool
 	// Debug enables verbose logging.
 	Debug bool
 	// FaviconCacheDir is the directory where downloaded favicons are stored.
@@ -41,12 +50,21 @@ type Config struct {
 // Config. It never fails: missing values fall back to defaults.
 func Load() *Config {
 	return &Config{
-		DatabasePath:     env("DATABASE_PATH", "database/bookmarks.db"),
-		Debug:            envBool("DEBUG", true),
-		FaviconCacheDir:  env("FAVICON_CACHE_DIR", "web/static/favicons"),
-		AuthUsername:     env("HTTP_AUTH_USERNAME", "admin"),
-		AuthPassword:     env("HTTP_AUTH_PASSWORD", "changeme"),
-		Port:             envInt("HTTP_PORT", 8080),
+		DatabasePath: env("DATABASE_PATH", "database/bookmarks.db"),
+		// Durability-first SQLite defaults that are safe on a gcsfuse-backed
+		// volume where the instance can be killed at any time. On a local or
+		// persistent disk you may override SQLITE_JOURNAL_MODE=WAL for more
+		// concurrency.
+		SQLiteJournalMode:      env("SQLITE_JOURNAL_MODE", "TRUNCATE"),
+		SQLiteSynchronous:      env("SQLITE_SYNCHRONOUS", "FULL"),
+		SQLiteSingleConnection: envBool("SQLITE_SINGLE_CONNECTION", true),
+		Debug:                  envBool("DEBUG", true),
+		FaviconCacheDir:        env("FAVICON_CACHE_DIR", "web/static/favicons"),
+		AuthUsername:           env("HTTP_AUTH_USERNAME", "admin"),
+		AuthPassword:           env("HTTP_AUTH_PASSWORD", "changeme"),
+		// Cloud Run injects the listen port via PORT; honour it first and fall
+		// back to HTTP_PORT (and finally 8080) for other environments.
+		Port:             envInt("PORT", envInt("HTTP_PORT", 8080)),
 		MaxContentLength: 128 * 1024, // 128 KB
 		SessionLifetime:  time.Hour,
 		RateLimit:        envInt("RATELIMIT_PER_MINUTE", 100),
