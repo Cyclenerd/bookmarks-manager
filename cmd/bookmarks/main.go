@@ -140,7 +140,7 @@ func initialize(cfg *config.Config, logger *slog.Logger, gate *middleware.ReadyG
 	bookmarkRepo := repository.NewBookmarkRepository(db, folderRepo)
 
 	// Services.
-	faviconSvc := service.NewFaviconService(cfg.FaviconCacheDir, logger)
+	faviconSvc := service.NewFaviconServiceWithBudget(cfg.FaviconCacheDir, cfg.FaviconTimeout, logger)
 	metadataSvc := service.NewMetadataService()
 	firefoxSvc := service.NewFirefoxService(db, bookmarkRepo, folderRepo, tagRepo, faviconSvc)
 

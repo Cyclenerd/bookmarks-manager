@@ -28,6 +28,9 @@ type Config struct {
 	Debug bool
 	// FaviconCacheDir is the directory where downloaded favicons are stored.
 	FaviconCacheDir string
+	// FaviconTimeout bounds the total time spent discovering a favicon for a
+	// single bookmark. It caps how long a save can block on favicon lookup.
+	FaviconTimeout time.Duration
 	// AuthUsername is the HTTP Basic Auth username.
 	AuthUsername string
 	// AuthPassword is the HTTP Basic Auth password.
@@ -60,6 +63,7 @@ func Load() *Config {
 		SQLiteSingleConnection: envBool("SQLITE_SINGLE_CONNECTION", true),
 		Debug:                  envBool("DEBUG", true),
 		FaviconCacheDir:        env("FAVICON_CACHE_DIR", "web/static/favicons"),
+		FaviconTimeout:         time.Duration(envInt("FAVICON_TIMEOUT", 8)) * time.Second,
 		AuthUsername:           env("HTTP_AUTH_USERNAME", "admin"),
 		AuthPassword:           env("HTTP_AUTH_PASSWORD", "changeme"),
 		// Cloud Run injects the listen port via PORT; honour it first and fall

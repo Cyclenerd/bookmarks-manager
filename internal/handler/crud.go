@@ -95,7 +95,19 @@ func (h *Handler) saveBookmark(w http.ResponseWriter, r *http.Request) {
 		folderPtr = &folderID
 	}
 
-	favicon := h.favicons.Download(rawURL)
+	// Only fetch a favicon when necessary: on create, or on update when the URL
+	// changed (or the bookmark has no favicon yet). This avoids the (bounded but
+	// still noticeable) network round-trips when merely editing a bookmark's
+	// title, folder or tags. The download itself is time-bounded so a URL with
+	// no discoverable favicon cannot block the save for long.
+	favicon := ""
+	if bookmarkID == "" {
+		favicon = h.favicons.DownloadContext(r.Context(), rawURL)
+	} else if existing, gerr := h.bookmarks.Get(bookmarkID); gerr == nil && existing != nil {
+		if existing.Favicon == "" || existing.URL != rawURL {
+			favicon = h.favicons.DownloadContext(r.Context(), rawURL)
+		}
+	}
 
 	var err error
 	if bookmarkID != "" {

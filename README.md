@@ -206,6 +206,7 @@ The `.env.example` file lists all available settings. Copy it to `.env` for refe
 | `HTTP_PORT` | HTTP server port (fallback when `PORT` is unset) | `8080` |
 | `DEBUG` | Enable verbose (debug) logging | `true` |
 | `FAVICON_CACHE_DIR` | Directory for favicon cache storage | `web/static/favicons` |
+| `FAVICON_TIMEOUT` | Max total seconds spent discovering a favicon per bookmark save | `8` |
 | `RATELIMIT_PER_MINUTE` | Requests per minute per client IP | `100` |
 
 ### Rate Limiting
