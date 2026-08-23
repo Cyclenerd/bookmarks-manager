@@ -7,7 +7,7 @@ require (
 	github.com/google/uuid v1.6.0
 	golang.org/x/image v0.45.0
 	golang.org/x/net v0.58.0
-	modernc.org/sqlite v1.56.0
+	modernc.org/sqlite v1.57.0
 )
 
 require (
