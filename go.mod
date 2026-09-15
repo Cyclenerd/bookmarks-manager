@@ -6,7 +6,7 @@ require (
 	github.com/biessek/golang-ico v0.0.0-20250805151044-6d8ea19fb761
 	github.com/google/uuid v1.6.0
 	golang.org/x/image v0.46.0
-	golang.org/x/net v0.58.0
+	golang.org/x/net v0.59.0
 	modernc.org/sqlite v1.58.0
 )
 
